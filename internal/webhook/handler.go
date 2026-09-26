@@ -40,8 +40,25 @@ func (h *Handler) HandleWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// PASO G: Evaluador de eventos
+	eventType := r.Header.Get("X-GitHub-Event")
+
+	switch eventType {
+	case "ping":
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintln(w, `{"status": "OK", "message": "Pong"}`)
+		return
+	case "release", "pull_request":
+		// Evento permitido: dejamos continuar la ejecución
+	default:
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintln(w, `{"status": "OK", "message": "Event ignored"}`)
+		return
+	}
+
 	// Paso A: Decodificar el JSON entrante
-	var info RepositoryInfo
+	var info GitHubPayload
+	info.EventType = eventType
 	err = json.NewDecoder(bytes.NewBuffer(bodyBytes)).Decode(&info)
 
 	if err != nil {
