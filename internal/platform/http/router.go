@@ -3,12 +3,17 @@ package server
 import (
 	"fmt"
 	"net/http"
+
+	"github.com/hawksxo/git-to-feed/internal/webhook"
 )
 
 func NewRouter() http.Handler {
 	mux := http.NewServeMux()
+	useCase := webhook.ProcessWebhookUseCase{}
+	handler := webhook.Handler{ProcessWebhookUseCase: useCase}
 
-	mux.HandleFunc("/health", healthHandler)
+	mux.HandleFunc("GET /health", healthHandler)
+	mux.HandleFunc("POST /api/v1/webhooks/github", handler.HandleWebhook)
 
 	return mux
 }
