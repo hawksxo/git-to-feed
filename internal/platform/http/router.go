@@ -12,8 +12,8 @@ func NewRouter() http.Handler {
 	useCase := webhook.ProcessWebhookUseCase{}
 	handler := webhook.Handler{ProcessWebhookUseCase: useCase}
 
-	mux.HandleFunc("/health", healthHandler)
-	mux.HandleFunc("/api/v1/webhooks/github", handler.HandleWebhook)
+	mux.HandleFunc("GET /health", healthHandler)
+	mux.HandleFunc("POST /api/v1/webhooks/github", handler.HandleWebhook)
 
 	return mux
 }

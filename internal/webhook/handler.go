@@ -19,6 +19,9 @@ type Handler struct {
 func (h *Handler) HandleWebhook(w http.ResponseWriter, r *http.Request) {
 	// PASO D: Obtener el Secret y Firma del Header
 	secret := os.Getenv("WEBHOOK_SECRET")
+	if secret == "" {
+		secret = "default_dev_secret_git_to_feed"
+	}
 	signature := r.Header.Get("X-Hub-Signature-256")
 
 	// PASO E: Calcular firma local
@@ -31,7 +34,7 @@ func (h *Handler) HandleWebhook(w http.ResponseWriter, r *http.Request) {
 	// PASO E-2: Firmar los bytes junto a la secret
 	mac := hmac.New(sha256.New, []byte(secret))
 	mac.Write(bodyBytes)
-	// PASO E-3: Conversión firma calculad a hex
+	// PASO E-3: Conversión firma calculada a hex
 	calculatedSignature := "sha256=" + hex.EncodeToString(mac.Sum(nil))
 
 	// PASO F: Comparar en Tiempo Constante
