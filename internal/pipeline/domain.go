@@ -3,6 +3,8 @@ package pipeline
 import "time"
 
 type GitData struct {
+	EventType   string
+	Tag         string
 	Title       string
 	Description string
 	Author      string

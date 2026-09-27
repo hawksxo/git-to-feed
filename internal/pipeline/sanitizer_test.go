@@ -19,9 +19,14 @@ func TestSanitizeText(t *testing.T) {
 			expected: "Feature description\n- [X] Task done",
 		},
 		{
-			name: "Debe eliminar espacios excesivos",
-			raw: "   Text with spaces   \n",
+			name:     "Debe eliminar espacios excesivos",
+			raw:      "   Text with spaces   \n",
 			expected: "Text with spaces",
+		},
+		{
+			name:     "Debe normalizar múltiples saltos de línea consecutivos",
+			raw:      "Paragraph 1\n\n\n\nParagraph 2",
+			expected: "Paragraph 1\n\nParagraph 2",
 		},
 	}
 

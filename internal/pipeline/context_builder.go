@@ -17,29 +17,42 @@ func (cb *ContextBuilder) FromRelease(release webhook.ReleaseInfo, repo webhook.
 
 	return RichContext{
 		GitData: GitData{
+			EventType:   "release",
+			Tag:         release.TagName,
 			Title:       release.Name,
 			Description: cleanDescription,
 			Author:      sender.User,
 			Repository:  repo.FullName,
 			URL:         release.HTMLURL,
 		},
-		HumanNotes: notes,
+		HumanNotes: copyHumanNotes(notes),
 		CreatedAt:  time.Now(),
 	}
 }
 
-func (cb *ContextBuilder) FromPullRequest(pr webhook.PullRequestInfo, repo webhook.RepositoryInfo, sender webhook.SenderInfo, notes *HumanNotes) RichContext  {
+func (cb *ContextBuilder) FromPullRequest(pr webhook.PullRequestInfo, repo webhook.RepositoryInfo, sender webhook.SenderInfo, notes *HumanNotes) RichContext {
 	cleanDescription := SanitizeText(pr.Body)
-	
+
 	return RichContext{
 		GitData: GitData{
-			Title: pr.Title,
+			EventType:   "pull_request",
+			Tag:         "",
+			Title:       pr.Title,
 			Description: cleanDescription,
-			Author: sender.User,
-			Repository: repo.FullName,
-			URL: pr.HTMLURL,
+			Author:      sender.User,
+			Repository:  repo.FullName,
+			URL:         pr.HTMLURL,
 		},
-		HumanNotes: notes,
-		CreatedAt: time.Now(),
+		HumanNotes: copyHumanNotes(notes),
+		CreatedAt:  time.Now(),
+	}
+}
+
+func copyHumanNotes(notes *HumanNotes) *HumanNotes {
+	if notes == nil {
+		return nil
+	}
+	return &HumanNotes{
+		Notes: notes.Notes,
 	}
 }

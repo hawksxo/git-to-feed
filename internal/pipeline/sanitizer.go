@@ -18,7 +18,11 @@ func SanitizeText(raw string) string {
 	reMultispace := regexp.MustCompile(`[ \t]+`)
 	clean = reMultispace.ReplaceAllString(clean, " ")
 
-	// PASO D: Limpiar espacios en blanco al inicio y final
+	// PASO D: Normalizar múltiples saltos de línea consecutivos (máximo 2)
+	reNewlines := regexp.MustCompile(`\n{3,}`)
+	clean = reNewlines.ReplaceAllString(clean, "\n\n")
+
+	// PASO E: Limpiar espacios en blanco al inicio y final
 	clean = strings.TrimSpace(clean)
 	return clean
 }
