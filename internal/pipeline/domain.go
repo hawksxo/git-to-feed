@@ -21,3 +21,9 @@ type RichContext struct {
 	HumanNotes *HumanNotes
 	CreatedAt  time.Time
 }
+
+type GeneratedPost struct {
+	Content string
+	Archetype Archetype
+	CreatedAt time.Time
+}
