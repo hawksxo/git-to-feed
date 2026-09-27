@@ -34,8 +34,28 @@ func TestBuildPromptSuccess(t *testing.T) {
 		t.Errorf("Expected prompt to contain [SYSTEM INSTRUCTION]")
 	}
 
+	if !strings.Contains(prompt, "Event Type: release") {
+		t.Errorf("Expected prompt to contain Event Type: release")
+	}
+
+	if !strings.Contains(prompt, "Tag: v1.0.0") {
+		t.Errorf("Expected prompt to contain Tag: v1.0.0")
+	}
+
 	if !strings.Contains(prompt, "v1.0.0 Release") {
 		t.Errorf("Expected prompt to contain release title")
+	}
+
+	if !strings.Contains(prompt, "Repository: hawksxo/git-to-feed") {
+		t.Errorf("Expected prompt to contain Repository")
+	}
+
+	if !strings.Contains(prompt, "Actor: hawksxo") {
+		t.Errorf("Expected prompt to contain Actor: hawksxo")
+	}
+
+	if !strings.Contains(prompt, "URL: https://github.com/hawksxo/git-to-feed") {
+		t.Errorf("Expected prompt to contain URL")
 	}
 
 	if !strings.Contains(prompt, "Importante destacar el aspecto de seguridad.") {
