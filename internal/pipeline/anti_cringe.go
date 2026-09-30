@@ -5,25 +5,30 @@ import (
 	"strings"
 )
 
-var cliches = map[string]string{
-	"I am thrilled to announce": "Lanzamos",
-	"thrilled to announce":      "presentamos",
-	"game-changer":              "mejora clave",
-	"game changer":              "mejora clave",
-	"synergy":                   "integración",
-	"paradigm shift":            "cambio de enfoque",
-	"unleash the power":         "aprovechar",
-	"next-level":                "avanzado",
-	"next level":                "avanzado",
+type clicheReplacement struct {
+	phrase      string
+	replacement string
+}
+
+var cliches = []clicheReplacement{
+	{phrase: "I am thrilled to announce", replacement: "Lanzamos"},
+	{phrase: "thrilled to announce", replacement: "presentamos"},
+	{phrase: "game-changer", replacement: "mejora clave"},
+	{phrase: "game changer", replacement: "mejora clave"},
+	{phrase: "synergy", replacement: "integración"},
+	{phrase: "paradigm shift", replacement: "cambio de enfoque"},
+	{phrase: "unleash the power", replacement: "aprovechar"},
+	{phrase: "next-level", replacement: "avanzado"},
+	{phrase: "next level", replacement: "avanzado"},
 }
 
 func ApplyAntiCringeFilter(raw string) string {
 	clean := raw
 
-	// PASO 1: Reemplazar o remover clichés corporativos
-	for cliche, replacement := range cliches {
-		re := regexp.MustCompile("(?i)" + regexp.QuoteMeta(cliche))
-		clean = re.ReplaceAllString(clean, replacement)
+	// PASO 1: Reemplazar o remover clichés corporativos (orden descendente por longitud)
+	for _, item := range cliches {
+		re := regexp.MustCompile("(?i)" + regexp.QuoteMeta(item.phrase))
+		clean = re.ReplaceAllString(clean, item.replacement)
 	}
 
 	// PASO 2: Normalizar densidad excesiva de emojis repetidos consecutivamente (máximo 2)
