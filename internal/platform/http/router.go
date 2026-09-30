@@ -13,6 +13,7 @@ import (
 	"github.com/hawksxo/git-to-feed/internal/pipeline"
 	"github.com/hawksxo/git-to-feed/internal/platform"
 	"github.com/hawksxo/git-to-feed/internal/platform/config"
+	"github.com/hawksxo/git-to-feed/internal/platform/storage"
 	"github.com/hawksxo/git-to-feed/internal/publisher"
 	"github.com/hawksxo/git-to-feed/internal/webhook"
 )
@@ -30,6 +31,22 @@ func NewRouter(cfg *config.Config) http.Handler {
 	mux.HandleFunc("GET /api/v1/approvals/pending", approvalHandler.HandleListPending)
 	mux.HandleFunc("POST /api/v1/approvals/{uuid}/reject", approvalHandler.HandleReject)
 	mux.HandleFunc("PUT /api/v1/approvals/{uuid}/edit", approvalHandler.HandleEditAndApprove)
+
+	// Few-Shot Admin Endpoints
+	var fewShotRepo pipeline.FewShotRepository
+	if cfg.DatabaseURL != "" {
+		if db, err := storage.NewPostgresDB(cfg.DatabaseURL); err == nil {
+			fewShotRepo = pipeline.NewPostgresFewShotRepository(db)
+		} else {
+			fewShotRepo = pipeline.NewInMemoryFewShotRepository()
+		}
+	} else {
+		fewShotRepo = pipeline.NewInMemoryFewShotRepository()
+	}
+
+	adminHandler := pipeline.NewAdminHandler(fewShotRepo)
+	mux.HandleFunc("GET /api/v1/examples", adminHandler.HandleListExamples)
+	mux.HandleFunc("POST /api/v1/examples", adminHandler.HandleCreateExample)
 
 	// Publisher module routes
 	postProcessor := pipeline.NewPostProcessor()

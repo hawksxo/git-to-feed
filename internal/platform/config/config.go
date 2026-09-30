@@ -7,6 +7,7 @@ type Config struct {
 	GitHubWebhookSecret string
 	LinkedInAccessToken string
 	LinkedInAuthorURN   string
+	DatabaseURL         string
 }
 
 func LoadConfig() *Config {
@@ -17,11 +18,13 @@ func LoadConfig() *Config {
 	githubWebhookSecret := os.Getenv("GITHUB_WEBHOOK_SECRET")
 	linkedinAccessToken := os.Getenv("LINKEDIN_ACCESS_TOKEN")
 	linkedinAuthorURN := os.Getenv("LINKEDIN_AUTHOR_URN")
+	databaseURL := os.Getenv("DATABASE_URL")
 
 	return &Config{
 		Port:                port,
 		GitHubWebhookSecret: githubWebhookSecret,
 		LinkedInAccessToken: linkedinAccessToken,
 		LinkedInAuthorURN:   linkedinAuthorURN,
+		DatabaseURL:         databaseURL,
 	}
 }
