@@ -4,6 +4,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,6 +14,7 @@ import (
 	"github.com/hawksxo/git-to-feed/internal/platform"
 	"github.com/hawksxo/git-to-feed/internal/platform/config"
 	"github.com/hawksxo/git-to-feed/internal/publisher"
+	"github.com/hawksxo/git-to-feed/internal/webhook"
 )
 
 func NewRouter(cfg *config.Config) http.Handler {
@@ -78,12 +80,13 @@ func NewRouter(cfg *config.Config) http.Handler {
 			return
 		}
 
-		rawText := "Nuevo evento ingresado desde GitHub: " + eventType
+		var payload webhook.GitHubPayload
+		payload.EventType = eventType
 		if len(bodyBytes) > 0 {
-			rawText = string(bodyBytes)
+			_ = json.Unmarshal(bodyBytes, &payload)
 		}
 
-		approvalPost, err := orchestrator.ProcessGitHubEvent(r.Context(), rawText, pipeline.ArchetypeRelease)
+		approvalPost, err := orchestrator.ProcessGitHubPayload(r.Context(), payload)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

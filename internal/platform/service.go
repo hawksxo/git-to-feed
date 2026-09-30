@@ -6,16 +6,45 @@ import (
 	"github.com/hawksxo/git-to-feed/internal/approval"
 	"github.com/hawksxo/git-to-feed/internal/pipeline"
 	"github.com/hawksxo/git-to-feed/internal/publisher"
+	"github.com/hawksxo/git-to-feed/internal/webhook"
 )
 
 type EventOrchestrator struct {
 	approvalUseCase *approval.ApprovalUseCase
 	postProcessor   *pipeline.PostProcessor
 	publishUseCase  *publisher.PublishApprovedPostUseCase
+	contextBuilder  *pipeline.ContextBuilder
+	generator       *pipeline.DefaultGenerator
 }
 
 func NewEventOrchestrator(approvalUseCase *approval.ApprovalUseCase, postProcessor *pipeline.PostProcessor, publishUseCase *publisher.PublishApprovedPostUseCase) *EventOrchestrator {
-	return &EventOrchestrator{approvalUseCase: approvalUseCase, postProcessor: postProcessor, publishUseCase: publishUseCase}
+	return &EventOrchestrator{
+		approvalUseCase: approvalUseCase,
+		postProcessor:   postProcessor,
+		publishUseCase:  publishUseCase,
+		contextBuilder:  pipeline.NewContextBuilder(),
+		generator:       pipeline.NewDefaultGenerator(),
+	}
+}
+
+func (eo *EventOrchestrator) ProcessGitHubPayload(ctx context.Context, payload webhook.GitHubPayload) (*approval.ApprovalPost, error) {
+	var richCtx pipeline.RichContext
+	var archetype pipeline.Archetype
+
+	if payload.EventType == "release" || payload.Release.TagName != "" {
+		richCtx = eo.contextBuilder.FromRelease(payload.Release, payload.Repository, payload.Sender, nil)
+		archetype = pipeline.ArchetypeRelease
+	} else {
+		richCtx = eo.contextBuilder.FromPullRequest(payload.PullRequest, payload.Repository, payload.Sender, nil)
+		archetype = pipeline.ArchetypeFeature
+	}
+
+	generatedPost, err := eo.generator.Generate(richCtx, archetype)
+	if err != nil {
+		return nil, err
+	}
+
+	return eo.approvalUseCase.SubmitForApproval(ctx, generatedPost)
 }
 
 func (eo *EventOrchestrator) ProcessGitHubEvent(ctx context.Context, rawText string, archetype pipeline.Archetype) (*approval.ApprovalPost, error) {
