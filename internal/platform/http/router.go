@@ -13,6 +13,7 @@ import (
 	"github.com/hawksxo/git-to-feed/internal/pipeline"
 	"github.com/hawksxo/git-to-feed/internal/platform"
 	"github.com/hawksxo/git-to-feed/internal/platform/config"
+	"github.com/hawksxo/git-to-feed/internal/platform/storage"
 	"github.com/hawksxo/git-to-feed/internal/publisher"
 	"github.com/hawksxo/git-to-feed/internal/webhook"
 )
@@ -22,8 +23,24 @@ func NewRouter(cfg *config.Config) http.Handler {
 
 	mux.HandleFunc("GET /health", healthHandler)
 
-	// Approval module routes (Human-in-the-Loop)
-	approvalRepo := approval.NewInMemoryApprovalRepository()
+	// Approval & Publisher Persistence (PostgreSQL / Supabase if DATABASE_URL is set, else InMemory)
+	var approvalRepo approval.ApprovalRepository
+	var publisherRepo publisher.PublisherRepository
+
+	if cfg.DatabaseURL != "" {
+		db, err := storage.NewPostgresDB(cfg.DatabaseURL)
+		if err == nil {
+			approvalRepo = approval.NewPostgresApprovalRepository(db)
+			publisherRepo = publisher.NewPostgresPublisherRepository(db)
+		} else {
+			approvalRepo = approval.NewInMemoryApprovalRepository()
+			publisherRepo = publisher.NewInMemoryPublisherRepository()
+		}
+	} else {
+		approvalRepo = approval.NewInMemoryApprovalRepository()
+		publisherRepo = publisher.NewInMemoryPublisherRepository()
+	}
+
 	approvalUseCase := approval.NewApprovalUseCase(approvalRepo)
 	approvalHandler := approval.NewHandler(approvalUseCase)
 
@@ -33,7 +50,6 @@ func NewRouter(cfg *config.Config) http.Handler {
 
 	// Publisher module routes
 	postProcessor := pipeline.NewPostProcessor()
-	publisherRepo := publisher.NewInMemoryPublisherRepository()
 
 	var linkedInClient publisher.LinkedInClient
 	if cfg.LinkedInAccessToken != "" {
