@@ -1,6 +1,7 @@
 package pipeline
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -13,16 +14,33 @@ type Generator interface {
 type DefaultGenerator struct {
 	promptBuilder *PromptBuilder
 	postProcessor *PostProcessor
+	geminiLLMClient * GeminiLLMClient
 }
 
-func NewDefaultGenerator() *DefaultGenerator {
+func NewDefaultGenerator(geminiLLMClient *GeminiLLMClient) *DefaultGenerator {
 	return &DefaultGenerator{
 		promptBuilder: NewPromptBuilder(),
 		postProcessor: NewPostProcessor(),
+		geminiLLMClient: geminiLLMClient,
 	}
 }
 
 func (g *DefaultGenerator) Generate(ctx RichContext, archetype Archetype) (GeneratedPost, error) {
+	if g.geminiLLMClient != nil {
+		prompt, err := g.promptBuilder.BuildPrompt(ctx, archetype)
+		if err == nil {
+			rawContent, err := g.geminiLLMClient.GeneratePostWithLLM(context.Background(), prompt)
+			if err == nil && rawContent != "" {
+				cleanContent := ApplyAntiCringeFilter(rawContent)
+				return GeneratedPost{
+					Content: cleanContent,
+					Archetype: archetype,
+					CreatedAt: time.Now(),
+				}, nil
+			}
+		}
+	}
+	
 	var sb strings.Builder
 
 	switch archetype {
