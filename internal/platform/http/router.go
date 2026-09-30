@@ -13,6 +13,7 @@ import (
 	"github.com/hawksxo/git-to-feed/internal/pipeline"
 	"github.com/hawksxo/git-to-feed/internal/platform"
 	"github.com/hawksxo/git-to-feed/internal/platform/config"
+	"github.com/hawksxo/git-to-feed/internal/platform/discord"
 	"github.com/hawksxo/git-to-feed/internal/platform/storage"
 	"github.com/hawksxo/git-to-feed/internal/publisher"
 	"github.com/hawksxo/git-to-feed/internal/webhook"
@@ -82,6 +83,16 @@ func NewRouter(cfg *config.Config) http.Handler {
 	publishUseCase, _ := publisher.NewPublishApprovedPostUseCase(linkedInClient, publisherRepo, cfg.LinkedInAuthorURN)
 
 	orchestrator := platform.NewEventOrchestrator(approvalUseCase, postProcessor, publishUseCase)
+
+	// Inicializacion opcional del Bot de Discord para aprobaciones interactivas
+	if cfg.DiscordBotToken != "" && cfg.DiscordChannelID != "" {
+		bot, err := discord.NewBot(cfg.DiscordBotToken, cfg.DiscordChannelID, orchestrator)
+		if err == nil {
+			orchestrator.SetNotifier(bot)
+		} else {
+			fmt.Printf("⚠️ Advertencia: No se pudo conectar el Bot de Discord: %v\n", err)
+		}
+	}
 
 	mux.HandleFunc("POST /api/v1/webhooks/github", func(w http.ResponseWriter, r *http.Request) {
 		// Validacion de evento GitHub Webhook HMAC

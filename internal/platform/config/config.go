@@ -8,6 +8,8 @@ type Config struct {
 	LinkedInAccessToken string
 	LinkedInAuthorURN   string
 	DatabaseURL         string
+	DiscordBotToken     string
+	DiscordChannelID    string
 }
 
 func LoadConfig() *Config {
@@ -19,6 +21,8 @@ func LoadConfig() *Config {
 	linkedinAccessToken := os.Getenv("LINKEDIN_ACCESS_TOKEN")
 	linkedinAuthorURN := os.Getenv("LINKEDIN_AUTHOR_URN")
 	databaseURL := os.Getenv("DATABASE_URL")
+	discordBotToken := os.Getenv("DISCORD_BOT_TOKEN")
+	discordChannelID := os.Getenv("DISCORD_CHANNEL_ID")
 
 	return &Config{
 		Port:                port,
@@ -26,5 +30,7 @@ func LoadConfig() *Config {
 		LinkedInAccessToken: linkedinAccessToken,
 		LinkedInAuthorURN:   linkedinAuthorURN,
 		DatabaseURL:         databaseURL,
+		DiscordBotToken:     discordBotToken,
+		DiscordChannelID:    discordChannelID,
 	}
 }
