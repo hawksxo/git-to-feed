@@ -2,6 +2,7 @@ package platform
 
 import (
 	"context"
+	"os"
 
 	"github.com/hawksxo/git-to-feed/internal/approval"
 	"github.com/hawksxo/git-to-feed/internal/pipeline"
@@ -18,12 +19,18 @@ type EventOrchestrator struct {
 }
 
 func NewEventOrchestrator(approvalUseCase *approval.ApprovalUseCase, postProcessor *pipeline.PostProcessor, publishUseCase *publisher.PublishApprovedPostUseCase) *EventOrchestrator {
+	var geminiClient *pipeline.GeminiLLMClient
+	geminiApiKey := os.Getenv("GEMINI_API_KEY")
+	if geminiApiKey != "" {
+		geminiClient, _ = pipeline.NewGeminiLLMClient(geminiApiKey, os.Getenv("GEMINI_MODEL_NAME"))
+	}
+
 	return &EventOrchestrator{
 		approvalUseCase: approvalUseCase,
 		postProcessor:   postProcessor,
 		publishUseCase:  publishUseCase,
 		contextBuilder:  pipeline.NewContextBuilder(),
-		generator:       pipeline.NewDefaultGenerator(),
+		generator:       pipeline.NewDefaultGenerator(geminiClient),
 	}
 }
 
