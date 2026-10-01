@@ -18,12 +18,19 @@ func NewPostgresApprovalRepository(db *sql.DB) *PostgresApprovalRepository {
 
 func (r *PostgresApprovalRepository) Save(ctx context.Context, post *ApprovalPost) error {
 	query := `
-		INSERT INTO approval_posts (uuid, content, archetype, status, edited_content, reject_reason, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		INSERT INTO approval_posts (uuid, idempotency_key, content, archetype, status, edited_content, reject_reason, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		ON CONFLICT (idempotency_key) DO NOTHING
 	`
+	var idempotencyKey *string
+	if post.IdempotencyKey != "" {
+		idempotencyKey = &post.IdempotencyKey
+	}
+
 	_, err := r.db.ExecContext(
 		ctx, query,
 		post.UUID,
+		idempotencyKey,
 		post.GeneratedPost.Content,
 		string(post.GeneratedPost.Archetype),
 		string(post.Status),
@@ -33,7 +40,7 @@ func (r *PostgresApprovalRepository) Save(ctx context.Context, post *ApprovalPos
 		post.UpdatedAt,
 	)
 	if err != nil {
-		return fmt.Errorf("error guardando approval_post en postgres: %w", err)
+		return fmt.Errorf("error saving approval_post to postgres: %w", err)
 	}
 	return nil
 }

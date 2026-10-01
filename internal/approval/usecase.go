@@ -24,14 +24,19 @@ func NewApprovalUseCase(repo ApprovalRepository) *ApprovalUseCase {
 	return &ApprovalUseCase{repo: repo}
 }
 
-func (uc *ApprovalUseCase) SubmitForApproval(ctx context.Context, post pipeline.GeneratedPost) (*ApprovalPost, error) {
+func (uc *ApprovalUseCase) SubmitForApproval(ctx context.Context, post pipeline.GeneratedPost, idempotencyKey ...string) (*ApprovalPost, error) {
 	time.Sleep(time.Millisecond)
+	var key string
+	if len(idempotencyKey) > 0 {
+		key = idempotencyKey[0]
+	}
 	approvalPost := &ApprovalPost{
-		UUID:          fmt.Sprintf("app-%d", time.Now().UnixNano()),
-		GeneratedPost: post,
-		Status:        StatusPending,
-		CreatedAt:     time.Now(),
-		UpdatedAt:     time.Now(),
+		UUID:           fmt.Sprintf("app-%d", time.Now().UnixNano()),
+		IdempotencyKey: key,
+		GeneratedPost:  post,
+		Status:         StatusPending,
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
 	}
 
 	if err := uc.repo.Save(ctx, approvalPost); err != nil {
