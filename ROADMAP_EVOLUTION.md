@@ -1,13 +1,13 @@
 # 🚀 Architecture & Feature Evolution Roadmap (Git-To-Feed)
 
-This document records the architectural analysis and future enhancements identified for the technical content generation pipeline.
+This document records the architectural analysis, technical debt items, and future enhancements identified for the technical content generation pipeline.
 
 ---
 
 ## 1. 🔄 Frequency Management & Deduplication (Spam Prevention)
 - **Scenario:** Multiple Pull Requests (`FEATURE` / `REFACTOR`) are merged on the same day.
 - **Current State:** The system generates one draft per PR. The interactive Discord bot (Human-in-the-Loop) allows the developer to approve only the highest-impact post or schedule them over time.
-- **Future Evolution (Batching Engine):** Implement a aggregator ("Daily Digest") to group multiple PRs merged within a 6-hour window into a single consolidated publication.
+- **Future Evolution (Batching Engine):** Implement an aggregator ("Daily Digest") to group multiple PRs merged within a 6-hour window into a single consolidated publication.
 
 ---
 
@@ -27,6 +27,16 @@ This document records the architectural analysis and future enhancements identif
 
 ---
 
+## 4. ⚙️ Automated CI/CD Pipelines (GitHub Actions & Deployment Automation)
+- **Scenario:** Manual execution of verification tests, Docker builds, and cloud service deployments.
+- **Current State:** Manual release branch workflow and environment configuration in Render/Supabase.
+- **Future Evolution (CI/CD Pipeline):**
+  - **CI Workflow (`.github/workflows/ci.yml`)**: Automate `go vet ./...`, `go test -v ./...`, and static analysis execution on every PR targeting `develop` or `release`.
+  - **Docker Build & Security Scan (`.github/workflows/docker.yml`)**: Build multi-stage Docker images, verify `.dockerignore` context, and run vulnerability scanning (Trivy/Grype).
+  - **CD Workflow (`.github/workflows/cd.yml`)**: Trigger automatic deployment hooks to Render Web Service and execute Supabase SQL migrations automatically when changes are pushed to the `release` branch.
+
+---
+
 ## 🌐 Multi-Repository Support (Universal GitHub Webhook)
 
 - **Does it work only with `git-to-feed` or any repository?**
@@ -35,15 +45,3 @@ This document records the architectural analysis and future enhancements identif
   - You can configure this same endpoint (`/api/v1/webhooks/github`) across **10, 20, or 100 different repositories** in your GitHub account or organization.
   - Sharing the same secret key (`GITHUB_WEBHOOK_SECRET`) across repositories will trigger instant ingestion for all of them.
   - **Future SaaS Multi-Tenant Enhancement:** Allow dynamic HMAC secrets per repository or organization token to separate Discord/LinkedIn configurations per project.
-
----
-
-## 5. 🤖 Automated CI/CD Workflows (GitHub Actions & Continuous Deployment)
-
-- **Scenario:** Manual execution of tests, static analysis, Docker container builds, and cloud deployments.
-- **Current State:** Local test execution (`go test ./...`, `go vet ./...`) and manual git push to deployment branches.
-- **Future Evolution (GitHub Actions Pipeline):**
-  - **Pull Request Automation (`pr-validation.yml`):** Automatically run `go vet ./...`, `go test -race ./...`, and linting rules on every incoming PR to `develop` or `release`.
-  - **Docker Security & Build Workflow (`docker-ci.yml`):** Build multi-stage Docker images on every tag release, scanning for vulnerabilities using Trivy or Docker Scout.
-  - **Continuous Deployment (`cd-deployment.yml`):** Trigger automated zero-downtime deployment hooks to Render Web Services and run automated database migrations on Supabase upon merging into the `release` branch.
-
