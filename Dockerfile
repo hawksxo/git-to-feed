@@ -22,8 +22,8 @@ FROM alpine:3.19
 
 WORKDIR /app
 
-# Copy ca-certificates from builder
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+# Install CA SSL certificates and timezone data in runtime image
+RUN apk add --no-cache ca-certificates tzdata
 
 # Copy executable binary
 COPY --from=builder /app/git-to-feed /app/git-to-feed
