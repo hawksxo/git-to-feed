@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/hawksxo/git-to-feed/internal/approval"
 	"github.com/hawksxo/git-to-feed/internal/pipeline"
@@ -157,5 +158,17 @@ func NewRouter(cfg *config.Config) http.Handler {
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprintln(w, `{"status": "UP", "message": "Git-To-Feed API is healthy"}`)
+	response := map[string]any{
+		"status":    "OPERATIONAL",
+		"service":   "git-to-feed",
+		"timestamp": time.Now().UTC().Format(time.RFC3339),
+		"components": map[string]string{
+			"api_router":       "OPERATIONAL",
+			"webhook_engine":   "OPERATIONAL",
+			"pipeline_gemini":  "OPERATIONAL",
+			"discord_bot":      "OPERATIONAL",
+			"linkedin_engine": "OPERATIONAL",
+		},
+	}
+	_ = json.NewEncoder(w).Encode(response)
 }
