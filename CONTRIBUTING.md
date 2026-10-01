@@ -32,13 +32,13 @@ We strictly follow **Git Flow**:
 All commit messages **must be written in English** following the [Conventional Commits](https://www.conventionalcommits.org/) specification coupled with official **Gitmojis**.
 
 ### Commit Syntax
-`<type>(<scope>): <gitmoji> <short description in lower case>`
+`<type>: :<gitmoji_code>: <concise description in lower case>`
 
 ### Examples:
-- `feat(webhook): ✨ add support for release tag events`
-- `fix(platform): 🐛 enforce canonical published action for release idempotency`
-- `docs(readme): 📝 fix mermaid diagram rendering syntax`
-- `build(docker): 🐳 install ca-certificates in runtime image`
+- `feat: :sparkles: add support for release tag events`
+- `fix: :bug: enforce canonical published action for release idempotency`
+- `docs: :memo: fix mermaid diagram rendering syntax`
+- `build: :whale: install ca-certificates in runtime image`
 
 ---
 
