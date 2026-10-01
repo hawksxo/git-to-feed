@@ -4,39 +4,39 @@ FROM golang:1.22-alpine AS builder
 
 WORKDIR /app
 
-# Instalar certificados SSL de CA para conexiones HTTPS seguras (LinkedIn & Gemini APIs)
+# Install CA SSL certificates for secure HTTPS connections (LinkedIn & Gemini APIs)
 RUN apk add --no-cache ca-certificates
 
-# Copiar archivos de modulos Go
+# Copy Go module dependency definitions
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copiar el codigo fuente
+# Copy source code
 COPY . .
 
-# Compilar binario estatico optimizado sin CGO
+# Build optimized static binary without CGO
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /app/git-to-feed ./cmd/api
 
-# Final Stage: Imagen minimalista para ejecucion
+# Final Stage: Minimalist runtime image
 FROM alpine:3.19
 
 WORKDIR /app
 
-# Copiar ca-certificates del builder
+# Copy ca-certificates from builder
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
-# Copiar binario ejecutable
+# Copy executable binary
 COPY --from=builder /app/git-to-feed /app/git-to-feed
 
-# Copiar la carpeta de migraciones SQL
+# Copy SQL migrations folder
 COPY --from=builder /app/migrations /app/migrations
 
-# Exponer el puerto por defecto de la aplicacion
+# Expose default application port
 EXPOSE 8080
 
-# Usuario sin privilegios por seguridad
+# Unprivileged non-root user for security
 RUN adduser -D appuser
 USER appuser
 
-# Comando de ejecucion
+# Execution entrypoint
 ENTRYPOINT ["/app/git-to-feed"]

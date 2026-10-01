@@ -13,18 +13,18 @@ func main() {
 	cfg := config.LoadConfig()
 
 	if cfg.DatabaseURL != "" {
-		fmt.Println("🚀 Ejecutando auto-migraciones SQL en Supabase/PostgreSQL...")
+		fmt.Println("🚀 Running SQL auto-migrations on Supabase/PostgreSQL...")
 		if err := storage.RunMigrations(cfg.DatabaseURL, ""); err != nil {
-			fmt.Printf("⚠️ Advertencia en migraciones: %v\n", err)
+			fmt.Printf("⚠️ Migration warning: %v\n", err)
 		}
 	}
 
 	router := server.NewRouter(cfg)
 
-	fmt.Println("Servidor iniciado en http://localhost:8080")
+	fmt.Println("Server started on http://localhost:8080")
 
 	err := http.ListenAndServe(cfg.Port, router)
 	if err != nil {
-		fmt.Printf("Error al iniciar el servidor: %v\n", err)
+		fmt.Printf("Error starting server: %v\n", err)
 	}
 }
