@@ -1,6 +1,6 @@
 # Multi-stage Dockerfile for Production
 # Build Stage
-FROM golang:1.23-alpine AS builder
+FROM golang:1.26-alpine AS builder
 
 WORKDIR /app
 
@@ -29,7 +29,7 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /app/git-to-feed /app/git-to-feed
 
 # Copy SQL migrations folder
-COPY --from=builder /app/migrations /app/migrations
+COPY --from=builder /app/supabase/migrations /app/supabase/migrations
 
 # Expose default application port
 EXPOSE 8080

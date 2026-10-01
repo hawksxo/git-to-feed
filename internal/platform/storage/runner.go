@@ -15,7 +15,7 @@ func RunMigrations(databaseURL string, migrationsPath string) error {
 		return errors.New("database URL is empty, skipping auto-migrations")
 	}
 	if migrationsPath == "" {
-		migrationsPath = "file://migrations"
+		migrationsPath = "file://supabase/migrations"
 	}
 
 	m, err := migrate.New(migrationsPath, databaseURL)
