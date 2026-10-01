@@ -13,7 +13,7 @@ import (
 func TestEventOrchestrator_FullFlow(t *testing.T) {
 	ctx := context.Background()
 
-	// 1. Instanciar Repositorios y Servicios
+	// 1. Instantiate Repositories and Services
 	approvalRepo := approval.NewInMemoryApprovalRepository()
 	approvalUseCase := approval.NewApprovalUseCase(approvalRepo)
 
@@ -23,10 +23,10 @@ func TestEventOrchestrator_FullFlow(t *testing.T) {
 	mockLinkedInClient := publisher.NewMockLinkedInClient("urn:li:share:123456", false)
 	publishUseCase, _ := publisher.NewPublishApprovedPostUseCase(mockLinkedInClient, publisherRepo, "urn:li:person:author")
 
-	// 2. Instanciar Orquestador
+	// 2. Instantiate Orchestrator
 	orchestrator := platform.NewEventOrchestrator(approvalUseCase, postProcessor, publishUseCase)
 
-	// 3. Probar Ingesta y Generacion (ProcessGitHubEvent)
+	// 3. Test Ingestion and Generation (ProcessGitHubEvent)
 	approvalPost, err := orchestrator.ProcessGitHubEvent(ctx, "Lanzamos una game-changer feature!", pipeline.ArchetypeFeature)
 	if err != nil {
 		t.Fatalf("error insperado en ProcessGitHubEvent: %v", err)
@@ -38,7 +38,7 @@ func TestEventOrchestrator_FullFlow(t *testing.T) {
 		t.Errorf("se esperaba estado PENDING, se obtuvo %s", approvalPost.Status)
 	}
 
-	// 4. Probar Aprobacion y Publicacion (ApproveAndPublish)
+	// 4. Test Approval and Publishing (ApproveAndPublish)
 	publishedRecord, err := orchestrator.ApproveAndPublish(ctx, approvalPost.UUID)
 	if err != nil {
 		t.Fatalf("error inesperado en ApproveAndPublish: %v", err)
