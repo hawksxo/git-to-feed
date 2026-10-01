@@ -8,16 +8,9 @@ services:
       - "8080:8080"
     env_file:
       - .env
-    environment:
-      - PORT=:8080
-      - GITHUB_WEBHOOK_SECRET=${GITHUB_WEBHOOK_SECRET}
-      - LINKEDIN_ACCESS_TOKEN=${LINKEDIN_ACCESS_TOKEN}
-      - LINKEDIN_AUTHOR_URN=${LINKEDIN_AUTHOR_URN}
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - GEMINI_MODEL_NAME=${GEMINI_MODEL_NAME:-gemini-3.5-flash-lite}
-      - DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN}
-      - DISCORD_CHANNEL_ID=${DISCORD_CHANNEL_ID}
-      - DATABASE_URL=${DATABASE_URL}
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1"]
