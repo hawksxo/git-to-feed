@@ -19,7 +19,7 @@ func NewGeminiLLMClient(apiKey string, modelName string) (*GeminiLLMClient, erro
 		return nil, ErrEmptyGeminiApiKey
 	}
 	if modelName == "" {
-		modelName = "gemini-1.5-flash"
+		modelName = "gemini-2.5-flash"
 	}
 	return &GeminiLLMClient{
 		apiKey:    apiKey,
