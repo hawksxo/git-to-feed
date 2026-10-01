@@ -56,3 +56,14 @@ This document records the architectural analysis, technical debt items, and futu
   - **Discord Slash Command (`/list-pending`)**: Interactive query command to locate, review, or re-trigger approval cards for historical pending releases (e.g., `v1.0.0`).
   - **Automatic TTL & Stale Purge Job**: Scheduled worker marking pending drafts older than 14 days as `EXPIRED`.
 
+---
+
+## 7. 📜 Consolidated Version Digest & Patch Merging
+- **Scenario:** Developer wants to publish a comprehensive launch post for a major version (`v1.0.0`), but multiple patch releases (`v1.0.1`...`v1.0.4`) have already been deployed with critical architectural fixes.
+- **Current State:** Each version tag generates an isolated draft without knowledge of subsequent or preceding patch history.
+- **Future Evolution (Digest Engine):**
+  - **Incremental History Enrichment**: Gemini AI pipeline queries recent tag history when generating a major release draft, synthesizing the initial release architecture with battle-tested patch enhancements.
+  - **Manual Digest Re-trigger (`/digest v1.0.0 --upto v1.0.4`)**: Slash command to re-synthesize and consolidate a historical major post with all intermediate patch release notes into a unified, high-impact LinkedIn post.
+
+
+
