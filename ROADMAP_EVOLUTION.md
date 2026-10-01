@@ -35,3 +35,15 @@ This document records the architectural analysis and future enhancements identif
   - You can configure this same endpoint (`/api/v1/webhooks/github`) across **10, 20, or 100 different repositories** in your GitHub account or organization.
   - Sharing the same secret key (`GITHUB_WEBHOOK_SECRET`) across repositories will trigger instant ingestion for all of them.
   - **Future SaaS Multi-Tenant Enhancement:** Allow dynamic HMAC secrets per repository or organization token to separate Discord/LinkedIn configurations per project.
+
+---
+
+## 5. 🤖 Automated CI/CD Workflows (GitHub Actions & Continuous Deployment)
+
+- **Scenario:** Manual execution of tests, static analysis, Docker container builds, and cloud deployments.
+- **Current State:** Local test execution (`go test ./...`, `go vet ./...`) and manual git push to deployment branches.
+- **Future Evolution (GitHub Actions Pipeline):**
+  - **Pull Request Automation (`pr-validation.yml`):** Automatically run `go vet ./...`, `go test -race ./...`, and linting rules on every incoming PR to `develop` or `release`.
+  - **Docker Security & Build Workflow (`docker-ci.yml`):** Build multi-stage Docker images on every tag release, scanning for vulnerabilities using Trivy or Docker Scout.
+  - **Continuous Deployment (`cd-deployment.yml`):** Trigger automated zero-downtime deployment hooks to Render Web Services and run automated database migrations on Supabase upon merging into the `release` branch.
+
