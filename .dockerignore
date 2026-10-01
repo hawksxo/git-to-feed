@@ -1,0 +1,9 @@
+.git
+.gitignore
+.env
+*.exe
+bin/
+scratch/
+README.md
+ROADMAP_EVOLUTION.md
+*.md
