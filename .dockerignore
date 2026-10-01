@@ -1,9 +1,12 @@
 .git
-.gitignore
+.github
 .env
-*.exe
 bin/
-scratch/
+*.exe
+*.test
+tmp/
+.vscode/
+.idea/
 README.md
 ROADMAP_EVOLUTION.md
-*.md
+pr_35_body.md
