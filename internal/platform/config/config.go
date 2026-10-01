@@ -14,6 +14,8 @@ type Config struct {
 	DatabaseURL         string
 	DiscordBotToken     string
 	DiscordChannelID    string
+	GeminiAPIKey        string
+	GeminiModelName     string
 }
 
 func LoadConfig() *Config {
@@ -29,6 +31,11 @@ func LoadConfig() *Config {
 	databaseURL := os.Getenv("DATABASE_URL")
 	discordBotToken := os.Getenv("DISCORD_BOT_TOKEN")
 	discordChannelID := os.Getenv("DISCORD_CHANNEL_ID")
+	geminiAPIKey := os.Getenv("GEMINI_API_KEY")
+	geminiModelName := os.Getenv("GEMINI_MODEL_NAME")
+	if geminiModelName == "" {
+		geminiModelName = "gemini-3.5-flash-lite"
+	}
 
 	return &Config{
 		Port:                port,
@@ -38,5 +45,7 @@ func LoadConfig() *Config {
 		DatabaseURL:         databaseURL,
 		DiscordBotToken:     discordBotToken,
 		DiscordChannelID:    discordChannelID,
+		GeminiAPIKey:        geminiAPIKey,
+		GeminiModelName:     geminiModelName,
 	}
 }

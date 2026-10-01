@@ -24,6 +24,95 @@ func NewRouter(cfg *config.Config) http.Handler {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /health", healthHandler)
+	mux.HandleFunc("GET /health/api-router", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"status":    "OPERATIONAL",
+			"component": "api_router",
+			"timestamp": time.Now().UTC().Format(time.RFC3339),
+		})
+	})
+	mux.HandleFunc("GET /health/webhook-engine", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"status":    "OPERATIONAL",
+			"component": "webhook_engine",
+			"timestamp": time.Now().UTC().Format(time.RFC3339),
+		})
+	})
+	mux.HandleFunc("GET /health/pipeline-gemini", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		status := "OPERATIONAL"
+		if cfg.GeminiAPIKey == "" {
+			status = "DEGRADED"
+		}
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"status":    status,
+			"component": "pipeline_gemini",
+			"model":     cfg.GeminiModelName,
+			"timestamp": time.Now().UTC().Format(time.RFC3339),
+		})
+	})
+	mux.HandleFunc("GET /health/discord-bot", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		status := "OPERATIONAL"
+		if cfg.DiscordBotToken == "" || cfg.DiscordChannelID == "" {
+			status = "DEGRADED"
+		}
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"status":    status,
+			"component": "discord_bot",
+			"timestamp": time.Now().UTC().Format(time.RFC3339),
+		})
+	})
+	mux.HandleFunc("GET /health/linkedin-engine", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		status := "OPERATIONAL"
+		if cfg.LinkedInAccessToken == "" || cfg.LinkedInAuthorURN == "" {
+			status = "DEGRADED"
+		}
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"status":    status,
+			"component": "linkedin_engine",
+			"timestamp": time.Now().UTC().Format(time.RFC3339),
+		})
+	})
+	mux.HandleFunc("GET /health/database", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		status := "OPERATIONAL"
+		message := "Supabase PostgreSQL connected"
+		if cfg.DatabaseURL == "" {
+			status = "DEGRADED"
+			message = "Running on InMemory repository fallback"
+		} else {
+			db, err := storage.NewPostgresDB(cfg.DatabaseURL)
+			if err != nil || db.Ping() != nil {
+				status = "OUTAGE"
+				message = "Database connection failed"
+				w.WriteHeader(http.StatusServiceUnavailable)
+				_ = json.NewEncoder(w).Encode(map[string]any{
+					"status":    status,
+					"component": "database_supabase",
+					"message":   message,
+					"timestamp": time.Now().UTC().Format(time.RFC3339),
+				})
+				return
+			}
+			db.Close()
+		}
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"status":    status,
+			"component": "database_supabase",
+			"message":   message,
+			"timestamp": time.Now().UTC().Format(time.RFC3339),
+		})
+	})
 
 	// Approval & Publisher Persistence (PostgreSQL / Supabase if DATABASE_URL is set, else InMemory)
 	var approvalRepo approval.ApprovalRepository

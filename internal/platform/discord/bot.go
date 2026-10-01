@@ -48,6 +48,10 @@ func (b *Bot) Close() {
 	}
 }
 
+func (b *Bot) IsConnected() bool {
+	return b.session != nil && b.session.State != nil
+}
+
 func (b *Bot) SendApprovalNotification(post *approval.ApprovalPost) error {
 	if post == nil {
 		return fmt.Errorf("post cannot be nil")
