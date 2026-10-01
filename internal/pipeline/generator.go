@@ -30,13 +30,16 @@ func (g *DefaultGenerator) Generate(ctx RichContext, archetype Archetype) (Gener
 		prompt, err := g.promptBuilder.BuildPrompt(ctx, archetype)
 		if err == nil {
 			rawContent, err := g.geminiLLMClient.GeneratePostWithLLM(context.Background(), prompt)
-			if err == nil && rawContent != "" {
+			if err == nil && strings.TrimSpace(rawContent) != "" {
 				cleanContent := ApplyAntiCringeFilter(rawContent)
 				return GeneratedPost{
-					Content: cleanContent,
+					Content:   cleanContent,
 					Archetype: archetype,
 					CreatedAt: time.Now(),
 				}, nil
+			}
+			if err != nil {
+				fmt.Printf("⚠️ Excepción al invocar Gemini LLM: %v\n", err)
 			}
 		}
 	}
