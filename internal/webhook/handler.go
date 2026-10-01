@@ -17,33 +17,33 @@ type Handler struct {
 }
 
 func (h *Handler) HandleWebhook(w http.ResponseWriter, r *http.Request) {
-	// PASO D: Obtener el Secret y Firma del Header
+	// STEP D: Retrieve Secret and Signature Header
 	secret := os.Getenv("WEBHOOK_SECRET")
 	if secret == "" {
 		secret = "default_dev_secret_git_to_feed"
 	}
 	signature := r.Header.Get("X-Hub-Signature-256")
 
-	// PASO E: Calcular firma local
-	// PASO E-1: Leer los bytes
+	// STEP E: Calculate local signature
+	// STEP E-1: Read request bytes
 	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, "Error al leer cuerpo de petición", http.StatusBadRequest)
+		http.Error(w, "Error reading request body", http.StatusBadRequest)
 		return
 	}
-	// PASO E-2: Firmar los bytes junto a la secret
+	// STEP E-2: Sign bytes using HMAC secret
 	mac := hmac.New(sha256.New, []byte(secret))
 	mac.Write(bodyBytes)
-	// PASO E-3: Conversión firma calculada a hex
+	// STEP E-3: Convert calculated signature to hex
 	calculatedSignature := "sha256=" + hex.EncodeToString(mac.Sum(nil))
 
-	// PASO F: Comparar en Tiempo Constante
+	// STEP F: Constant time signature comparison
 	if !hmac.Equal([]byte(signature), []byte(calculatedSignature)) {
-		http.Error(w, "Firma inválida", http.StatusUnauthorized)
+		http.Error(w, "Invalid signature", http.StatusUnauthorized)
 		return
 	}
 
-	// PASO G: Evaluador de eventos
+	// STEP G: Event evaluator
 	eventType := r.Header.Get("X-GitHub-Event")
 
 	switch eventType {
@@ -52,31 +52,31 @@ func (h *Handler) HandleWebhook(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, `{"status": "OK", "message": "Pong"}`)
 		return
 	case "release", "pull_request":
-		// Evento permitido: dejamos continuar la ejecución
+		// Allowed event: proceed with execution
 	default:
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintln(w, `{"status": "OK", "message": "Event ignored"}`)
 		return
 	}
 
-	// Paso A: Decodificar el JSON entrante
+	// STEP A: Decode incoming JSON
 	var info GitHubPayload
 	info.EventType = eventType
 	err = json.NewDecoder(bytes.NewBuffer(bodyBytes)).Decode(&info)
 
 	if err != nil {
-		http.Error(w, "JSON inválido", http.StatusBadRequest)
+		http.Error(w, "Invalid JSON payload", http.StatusBadRequest)
 		return
 	}
 
-	// Paso B: Invocar el Caso de Uso
+	// STEP B: Invoke Use Case
 	err = h.ProcessWebhookUseCase.ProcessEvent(info)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// Paso C: Responder el Cliente HTTP
+	// STEP C: Respond to HTTP client
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintln(w, `{"status": "OK", "message": "Listening Event"}`)
 }

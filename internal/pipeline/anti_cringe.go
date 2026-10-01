@@ -25,17 +25,17 @@ var cliches = []clicheReplacement{
 func ApplyAntiCringeFilter(raw string) string {
 	clean := raw
 
-	// PASO 1: Reemplazar o remover clichés corporativos (orden descendente por longitud)
+	// STEP 1: Replace or remove corporate clichés (descending order by length)
 	for _, item := range cliches {
 		re := regexp.MustCompile("(?i)" + regexp.QuoteMeta(item.phrase))
 		clean = re.ReplaceAllString(clean, item.replacement)
 	}
 
-	// PASO 2: Normalizar densidad excesiva de emojis repetidos consecutivamente (máximo 2)
+	// STEP 2: Normalize excessive consecutive repeated emojis (maximum 2)
 	reEmojiRepeat := regexp.MustCompile(`([\x{1F600}-\x{1F64F}\x{1F300}-\x{1F5FF}\x{1F680}-\x{1F6FF}\x{1F900}-\x{1F9FF}\x{2600}-\x{26FF}\x{2700}-\x{27BF}]){3,}`)
 	clean = reEmojiRepeat.ReplaceAllString(clean, "$1$1")
 
-	// PASO 3: Limpiar espacios extras
+	// STEP 3: Trim extra whitespace
 	clean = strings.TrimSpace(clean)
 
 	return clean

@@ -15,7 +15,7 @@ func NewAdminHandler(repo FewShotRepository) *AdminHandler {
 
 func (h *AdminHandler) HandleListExamples(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -32,13 +32,13 @@ func (h *AdminHandler) HandleListExamples(w http.ResponseWriter, r *http.Request
 
 func (h *AdminHandler) HandleCreateExample(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	var example FewShotExampleEntity
 	if err := json.NewDecoder(r.Body).Decode(&example); err != nil {
-		http.Error(w, "JSON inválido", http.StatusBadRequest)
+		http.Error(w, "Invalid JSON payload", http.StatusBadRequest)
 		return
 	}
 
