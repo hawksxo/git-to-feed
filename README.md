@@ -1,15 +1,81 @@
-# 🚀 Git-To-Feed Microservice
+<a id="readme-top"></a>
 
-[![Go Version](https://img.shields.io/badge/Go-1.22%2B-00ADD8?style=flat&logo=go)](https://go.dev/)
-[![Architecture](https://img.shields.io/badge/Architecture-Clean%20Architecture-blue)](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
-[![Pattern](https://img.shields.io/badge/Pattern-Package--by--Feature-brightgreen)](#architecture--package-by-feature-layout)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+<!-- PROJECT SHIELDS -->
+[![Contributors][contributors-shield]][contributors-url]
+[![Forks][forks-shield]][forks-url]
+[![Stargazers][stars-shield]][stars-url]
+[![Issues][issues-shield]][issues-url]
+[![MIT License][license-shield]][license-url]
+[![Go Version][go-shield]][go-url]
 
-`git-to-feed` is an automated, event-driven Go microservice designed under **Clean Architecture** and **Package-by-Feature** principles. It listens to GitHub repository Webhooks (Pull Requests and Releases), enriches the context, formats the payload using LLM models (Google Gemini AI) guided by curated **Few-Shot Examples**, and notifies an interactive **Discord Bot** for Human-in-the-Loop approval before live publication to **LinkedIn**.
+<!-- PROJECT LOGO -->
+<br />
+<div align="center">
+  <a href="https://github.com/hawksxo/git-to-feed">
+    <img src="https://raw.githubusercontent.com/github/explore/80688e429a7d4ef2fca1e82350fe8e3517d3494d/topics/go/go.png" alt="Logo" width="80" height="80">
+  </a>
 
----
+  <h3 align="center">Git-To-Feed</h3>
 
-## 🌟 Architecture & Package-by-Feature Layout
+  <p align="center">
+    Automated Event-Driven Microservice converting GitHub Webhooks into LinkedIn posts via Gemini AI & Discord Human-in-the-Loop approval.
+    <br />
+    <a href="https://github.com/hawksxo/git-to-feed"><strong>Explore the docs »</strong></a>
+    <br />
+    <br />
+    <a href="https://github.com/hawksxo/git-to-feed/issues">Report Bug</a>
+    &middot;
+    <a href="https://github.com/hawksxo/git-to-feed/issues">Request Feature</a>
+  </p>
+</div>
+
+<!-- TABLE OF CONTENTS -->
+<details>
+  <summary>Table of Contents</summary>
+  <ol>
+    <li>
+      <a href="#about-the-project">About The Project</a>
+      <ul>
+        <li><a href="#built-with">Built With</a></li>
+        <li><a href="#architecture--package-by-feature-layout">Architecture & Package-by-Feature Layout</a></li>
+      </ul>
+    </li>
+    <li>
+      <a href="#getting-started">Getting Started</a>
+      <ul>
+        <li><a href="#prerequisites">Prerequisites</a></li>
+        <li><a href="#environment-configuration">Environment Configuration</a></li>
+        <li><a href="#installation--running">Installation & Running</a></li>
+      </ul>
+    </li>
+    <li><a href="#usage--api-endpoints">Usage & API Endpoints</a></li>
+    <li><a href="#docker-deployment">Docker Deployment</a></li>
+    <li><a href="#roadmap">Roadmap</a></li>
+    <li><a href="#contributing">Contributing</a></li>
+    <li><a href="#license">License</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ol>
+</details>
+
+<!-- ABOUT THE PROJECT -->
+## About The Project
+
+`git-to-feed` is a production-ready, event-driven Go microservice designed under **Clean Architecture** and **Package-by-Feature** principles. It listens to GitHub repository Webhooks (Pull Requests and Releases), enriches event contexts, formats payloads using LLMs (Google Gemini AI) guided by curated **Few-Shot Examples**, and notifies an interactive **Discord Bot** for Human-in-the-Loop approval before live publication to **LinkedIn**.
+
+### System Architecture Flow
+
+```mermaid
+flowchart LR
+    GH["GitHub Webhook"] -->|HMAC Verified| WH["Webhook Handler"]
+    WH --> PIPE["Pipeline (Gemini AI + Anti-Cringe)"]
+    PIPE --> BOT["Discord Bot (Interactive Embed)"]
+    BOT -->|Approve/Reject| APP["Approval Engine"]
+    APP -->|Published| LI["LinkedIn API (ugcPosts)"]
+```
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+### Architecture & Package-by-Feature Layout
 
 The codebase strictly decouples business domain logic from infrastructure, storage, and transport layers.
 
@@ -34,24 +100,31 @@ git-to-feed/
 └── ROADMAP_EVOLUTION.md      # Future Architectural Roadmap & Evolution Specifications
 ```
 
----
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-## ⚙️ Features
+### Built With
 
-- **Event-Driven GitHub Webhook Ingestion:** Validates incoming payloads using HMAC-SHA256 signatures (`X-Hub-Signature-256`). Supports `pull_request` (closed/merged) and `release` (published) events.
-- **Universal Multi-Repository Compatibility:** Repository-agnostic design. A single deployed instance can ingest webhooks from 1, 10, or 100+ GitHub repositories.
-- **LLM Content Transformation:** Integrates Google Gemini API (`gemini-3.5-flash-lite`, `gemini-3.8-flash`) via the official `google.golang.org/genai` SDK.
-- **Curated Few-Shot Engineering:** Employs archetype-specific templates (`RELEASE`, `FEATURE`, `REFACTOR`) inspired by real-world technical posts (Alibaba Qwen, Google Gemini Skills, Anthropic Claude).
-- **Anti-Cringe & Sanitization Filters:** Removes corporate buzzword cliches, cleans HTML comments/checkboxes, and caps excessive emoji density.
-- **Interactive Discord Bot (Human-in-the-Loop):** Sends rich embeds with `🚀 Approve & Publish` and `❌ Reject` buttons directly to a designated Discord channel.
-- **LinkedIn Publishing Engine:** Communicates with LinkedIn API v2 (`ugcPosts`) to share approved content live.
-- **Multi-Storage Persistence:** Auto-detects `DATABASE_URL` for Supabase/PostgreSQL with automatic SQL migration runner, falling back to Thread-Safe InMemory repositories for local development and unit tests.
+* [![Go][Go-shield]][Go-url]
+* [![Google Gemini][Gemini-shield]][Gemini-url]
+* [![Discord][Discord-shield]][Discord-url]
+* [![PostgreSQL][Postgres-shield]][Postgres-url]
+* [![Docker][Docker-shield]][Docker-url]
 
----
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-## 🛠️ Environment Configuration
+<!-- GETTING STARTED -->
+## Getting Started
 
-Create a `.env` file in the root directory (refer to `.env.example`):
+Follow these steps to set up `git-to-feed` locally for development and testing.
+
+### Prerequisites
+
+* **Go 1.22+**: [Install Go](https://go.dev/dl/)
+* **Docker & Docker Compose** (Optional for containerization)
+
+### Environment Configuration
+
+Create a `.env` file in the root directory (see `.env.example`):
 
 ```ini
 PORT=":8080"
@@ -65,56 +138,33 @@ GEMINI_API_KEY="your-google-gemini-api-key"
 GEMINI_MODEL_NAME="gemini-3.5-flash-lite"
 ```
 
----
+### Installation & Running
 
-## 🚀 Local Development
+1. Clone the repository:
+   ```sh
+   git clone https://github.com/hawksxo/git-to-feed.git
+   cd git-to-feed
+   ```
+2. Download dependencies:
+   ```sh
+   go mod download
+   ```
+3. Run the application:
+   ```sh
+   go run cmd/api/main.go
+   ```
+4. Run tests & static analysis:
+   ```sh
+   go vet ./...
+   go test -v ./...
+   ```
 
-### Prerequisites
-- [Go 1.22+](https://go.dev/dl/)
-- Docker & Docker Compose (Optional)
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-### Running Locally
-```bash
-# Clone the repository
-git clone https://github.com/hawksxo/git-to-feed.git
-cd git-to-feed
+<!-- USAGE -->
+## Usage & API Endpoints
 
-# Download dependencies
-go mod download
-
-# Run the API server
-go run cmd/api/main.go
-```
-
-### Running Tests & Static Check
-```bash
-# Run static analysis
-go vet ./...
-
-# Run all unit and integration tests
-go test -v ./...
-```
-
----
-
-## 🐳 Docker Deployment
-
-Build and run using Docker Compose:
-
-```bash
-docker-compose up --build -d
-```
-
-Or using Docker directly:
-
-```bash
-docker build -t git-to-feed:latest .
-docker run -d -p 8080:8080 --env-file .env git-to-feed:latest
-```
-
----
-
-## 📖 API Endpoints Summary
+The microservice exposes clean REST HTTP endpoints:
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
@@ -127,14 +177,91 @@ docker run -d -p 8080:8080 --env-file .env git-to-feed:latest
 | `GET` | `/api/v1/examples` | Lists active Few-Shot examples |
 | `POST` | `/api/v1/examples` | Creates a new Few-Shot example entity |
 
----
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-## 📄 Roadmap & Future Evolution
+<!-- DOCKER DEPLOYMENT -->
+## Docker Deployment
 
-See [ROADMAP_EVOLUTION.md](file:///C:/Users/Posty/Documents/Backend/git-to-feed/ROADMAP_EVOLUTION.md) for detailed architectural specifications regarding event hierarchy, batching engines, and multi-tenant expansion.
+Build and run using Docker Compose:
 
----
+```sh
+docker-compose up --build -d
+```
 
-## 📜 License
+Or using Docker CLI directly:
 
-Distributed under the MIT License.
+```sh
+docker build -t git-to-feed:latest .
+docker run -d -p 8080:8080 --env-file .env git-to-feed:latest
+```
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- ROADMAP -->
+## Roadmap
+
+- [x] Universal Multi-Repository Webhook Ingestion (`pull_request`, `release`)
+- [x] Google Gemini AI Integration with Curated Few-Shot Engineering
+- [x] Anti-Cringe & Payload Sanitization Filters
+- [x] Interactive Discord Bot for Human-in-the-Loop Approvals
+- [x] Automatic PostgreSQL Schema Migration Engine
+- [ ] Event Batching & Aggregation Engine (Frequency Windows)
+- [ ] Multi-Tenant Repository Rules & Custom Prompts
+
+See [ROADMAP_EVOLUTION.md](ROADMAP_EVOLUTION.md) for full architectural roadmap specifications.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- CONTRIBUTING -->
+## Contributing
+
+Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'feat: add AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- LICENSE -->
+## License
+
+Distributed under the MIT License. See `LICENSE` for more information.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- CONTACT -->
+## Contact
+
+hawksxo - [@hawksxo](https://github.com/hawksxo)
+
+Project Link: [https://github.com/hawksxo/git-to-feed](https://github.com/hawksxo/git-to-feed)
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- MARKDOWN LINKS & IMAGES -->
+[contributors-shield]: https://img.shields.io/github/contributors/hawksxo/git-to-feed.svg?style=for-the-badge
+[contributors-url]: https://github.com/hawksxo/git-to-feed/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/hawksxo/git-to-feed.svg?style=for-the-badge
+[forks-url]: https://github.com/hawksxo/git-to-feed/network/members
+[stars-shield]: https://img.shields.io/github/stars/hawksxo/git-to-feed.svg?style=for-the-badge
+[stars-url]: https://github.com/hawksxo/git-to-feed/stargazers
+[issues-shield]: https://img.shields.io/github/issues/hawksxo/git-to-feed.svg?style=for-the-badge
+[issues-url]: https://github.com/hawksxo/git-to-feed/issues
+[license-shield]: https://img.shields.io/github/license/hawksxo/git-to-feed.svg?style=for-the-badge
+[license-url]: https://github.com/hawksxo/git-to-feed/blob/main/LICENSE
+[go-shield]: https://img.shields.io/badge/Go-1.22%2B-00ADD8?style=for-the-badge&logo=go
+[go-url]: https://go.dev/
+
+[Go-shield]: https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white
+[Go-url]: https://go.dev/
+[Gemini-shield]: https://img.shields.io/badge/Google%20Gemini-8E75B5?style=for-the-badge&logo=googlegemini&logoColor=white
+[Gemini-url]: https://ai.google.dev/
+[Discord-shield]: https://img.shields.io/badge/Discord%20Bot-5865F2?style=for-the-badge&logo=discord&logoColor=white
+[Discord-url]: https://discord.com/
+[Postgres-shield]: https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white
+[Postgres-url]: https://www.postgresql.org/
+[Docker-shield]: https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white
+[Docker-url]: https://www.docker.com/
