@@ -35,13 +35,24 @@ This document records the architectural analysis, technical debt items, and futu
   - **Docker Build & Security Scan (`.github/workflows/docker.yml`)**: Build multi-stage Docker images, verify `.dockerignore` context, and run vulnerability scanning (Trivy/Grype).
   - **CD Workflow (`.github/workflows/cd.yml`)**: Trigger automatic deployment hooks to Render Web Service and execute Supabase SQL migrations automatically when changes are pushed to the `release` branch.
 
+
 ---
 
-## 🌐 Multi-Repository Support (Universal GitHub Webhook)
+## 5. 📢 Multi-Channel Routing & Archetype Segmentation
+- **Scenario:** High volume of webhook events cluttering a single Discord channel, making it hard to locate high-priority releases vs. standard PR drafts.
+- **Current State:** All draft notifications are dispatched to a single unified Discord channel (`DISCORD_CHANNEL_ID`).
+- **Future Evolution (Multi-Channel Router):**
+  - **`DISCORD_CHANNEL_RELEASES_ID` (`#drafts-releases`)**: Dedicated high-priority channel receiving only major/minor release tags (`vX.Y.Z`).
+  - **`DISCORD_CHANNEL_FEATURES_ID` (`#drafts-features`)**: Channel dedicated to pull request drafts and minor refactors.
+  - **`DISCORD_CHANNEL_AUDIT_ID` (`#published-feed`)**: Audit log channel recording successful publication confirmations with direct LinkedIn URN post links.
 
-- **Does it work only with `git-to-feed` or any repository?**
-  - **UNIVERSAL:** The `git-to-feed` microservice is completely repo-agnostic and multi-repository compatible.
-  - Dynamically extracts `repository.full_name`, `pull_request.html_url`, `release.html_url`, etc., from the standard GitHub payload.
-  - You can configure this same endpoint (`/api/v1/webhooks/github`) across **10, 20, or 100 different repositories** in your GitHub account or organization.
-  - Sharing the same secret key (`GITHUB_WEBHOOK_SECRET`) across repositories will trigger instant ingestion for all of them.
-  - **Future SaaS Multi-Tenant Enhancement:** Allow dynamic HMAC secrets per repository or organization token to separate Discord/LinkedIn configurations per project.
+---
+
+## 6. 🧹 Interactive Draft Lifecycle & Purge Engine (Housekeeping)
+- **Scenario:** Pending drafts accumulate over time when developers decide not to publish specific PRs or releases.
+- **Current State:** Post approval cards remain static in Discord until manual action is taken.
+- **Future Evolution (Draft Management Suite):**
+  - **Interactive Discard Action (`🔴 Discard / Delete`)**: Button on Discord embed cards allowing immediate status transition to `REJECTED` in Supabase and automatic deletion/archival of the Discord message.
+  - **Discord Slash Command (`/list-pending`)**: Interactive query command to locate, review, or re-trigger approval cards for historical pending releases (e.g., `v1.0.0`).
+  - **Automatic TTL & Stale Purge Job**: Scheduled worker marking pending drafts older than 14 days as `EXPIRED`.
+
