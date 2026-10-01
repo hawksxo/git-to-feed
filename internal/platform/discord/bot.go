@@ -18,12 +18,12 @@ type Bot struct {
 
 func NewBot(token string, channelID string, orchestrator *platform.EventOrchestrator) (*Bot, error) {
 	if token == "" || channelID == "" {
-		return nil, fmt.Errorf("token y channelID de Discord son requeridos")
+		return nil, fmt.Errorf("Discord token and channelID are required")
 	}
 
 	dg, err := discordgo.New("Bot " + token)
 	if err != nil {
-		return nil, fmt.Errorf("error creando sesion de Discord: %w", err)
+		return nil, fmt.Errorf("error creating Discord session: %w", err)
 	}
 
 	bot := &Bot{
@@ -35,10 +35,10 @@ func NewBot(token string, channelID string, orchestrator *platform.EventOrchestr
 	dg.AddHandler(bot.handleInteraction)
 
 	if err := dg.Open(); err != nil {
-		return nil, fmt.Errorf("error abriendo conexion websocket con Discord: %w", err)
+		return nil, fmt.Errorf("error opening websocket connection with Discord: %w", err)
 	}
 
-	log.Println("🤖 Discord Bot de Aprobacion iniciado y escuchando interacciones con exito")
+	log.Println("🤖 Approval Discord Bot started and listening for interactions successfully")
 	return bot, nil
 }
 
@@ -50,44 +50,44 @@ func (b *Bot) Close() {
 
 func (b *Bot) SendApprovalNotification(post *approval.ApprovalPost) error {
 	if post == nil {
-		return fmt.Errorf("post no puede ser nil")
+		return fmt.Errorf("post cannot be nil")
 	}
 
 	embed := &discordgo.MessageEmbed{
-		Title:       "🤖 Nuevo Borrador de Post para LinkedIn",
+		Title:       "🤖 New LinkedIn Draft Post",
 		Description: post.GeneratedPost.Content,
-		Color:       0x0077B5, // Azul oficial LinkedIn
+		Color:       0x0077B5, // LinkedIn Official Blue
 		Fields: []*discordgo.MessageEmbedField{
 			{
-				Name:   "UUID de Borrador",
+				Name:   "Draft UUID",
 				Value:  post.UUID,
 				Inline: true,
 			},
 			{
-				Name:   "Arquetipo",
+				Name:   "Archetype",
 				Value:  string(post.GeneratedPost.Archetype),
 				Inline: true,
 			},
 			{
-				Name:   "Estado",
-				Value:  "🟡 PENDING (Esperando tu decisión)",
+				Name:   "Status",
+				Value:  "🟡 PENDING (Awaiting your decision)",
 				Inline: false,
 			},
 		},
 		Footer: &discordgo.MessageEmbedFooter{
-			Text: "Git-To-Feed • Presiona un botón para procesar",
+			Text: "Git-To-Feed • Click a button to process",
 		},
 	}
 
 	actions := discordgo.ActionsRow{
 		Components: []discordgo.MessageComponent{
 			discordgo.Button{
-				Label:    "🚀 Aprobar y Publicar",
+				Label:    "🚀 Approve & Publish",
 				Style:    discordgo.SuccessButton,
 				CustomID: "approve_" + post.UUID,
 			},
 			discordgo.Button{
-				Label:    "❌ Rechazar",
+				Label:    "❌ Reject",
 				Style:    discordgo.DangerButton,
 				CustomID: "reject_" + post.UUID,
 			},
@@ -100,7 +100,7 @@ func (b *Bot) SendApprovalNotification(post *approval.ApprovalPost) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("error enviando mensaje de aprobacion a Discord: %w", err)
+		return fmt.Errorf("error sending approval message to Discord: %w", err)
 	}
 
 	return nil
@@ -117,18 +117,18 @@ func (b *Bot) handleInteraction(s *discordgo.Session, i *discordgo.InteractionCr
 	if len(customID) > 8 && customID[:8] == "approve_" {
 		uuid := customID[8:]
 
-		// Responder inmediatamente a Discord para evitar timeout de 3 segundos
+		// Respond immediately to Discord to avoid 3-second timeout
 		_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseDeferredMessageUpdate,
 		})
 
 		pubRecord, err := b.orchestrator.ApproveAndPublish(ctx, uuid)
 		if err != nil {
-			b.updateMessageStatus(s, i, "🔴 FALLÓ LA PUBLICACIÓN", fmt.Sprintf("Error: %v", err), 0xFF0000)
+			b.updateMessageStatus(s, i, "🔴 PUBLICATION FAILED", fmt.Sprintf("Error: %v", err), 0xFF0000)
 			return
 		}
 
-		b.updateMessageStatus(s, i, "✅ PUBLICADO EN LINKEDIN EN VIVO", fmt.Sprintf("Share URN: %s", pubRecord.LinkedInShareURN), 0x00FF00)
+		b.updateMessageStatus(s, i, "✅ PUBLISHED ON LINKEDIN LIVE", fmt.Sprintf("Share URN: %s", pubRecord.LinkedInShareURN), 0x00FF00)
 		return
 	}
 
@@ -137,7 +137,7 @@ func (b *Bot) handleInteraction(s *discordgo.Session, i *discordgo.InteractionCr
 			Type: discordgo.InteractionResponseDeferredMessageUpdate,
 		})
 
-		b.updateMessageStatus(s, i, "❌ BORRADOR RECHAZADO", "El borrador ha sido descartado por el administrador.", 0x808080)
+		b.updateMessageStatus(s, i, "❌ DRAFT REJECTED", "The draft has been discarded by the administrator.", 0x808080)
 		return
 	}
 }
@@ -150,7 +150,7 @@ func (b *Bot) updateMessageStatus(s *discordgo.Session, i *discordgo.Interaction
 	origEmbed := i.Message.Embeds[0]
 	origEmbed.Color = color
 	origEmbed.Fields[2] = &discordgo.MessageEmbedField{
-		Name:   "Estado Final",
+		Name:   "Final Status",
 		Value:  fmt.Sprintf("%s\n%s", statusTitle, detail),
 		Inline: false,
 	}
@@ -158,11 +158,11 @@ func (b *Bot) updateMessageStatus(s *discordgo.Session, i *discordgo.Interaction
 	embeds := []*discordgo.MessageEmbed{origEmbed}
 	emptyComponents := []discordgo.MessageComponent{}
 
-	// Desactivar botones despues de la decision
+	// Disable buttons after decision
 	_, _ = s.ChannelMessageEditComplex(&discordgo.MessageEdit{
 		ID:         i.Message.ID,
 		Channel:    i.ChannelID,
 		Embeds:     &embeds,
-		Components: &emptyComponents, // Sin botones
+		Components: &emptyComponents, // No buttons
 	})
 }

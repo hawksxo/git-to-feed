@@ -10,18 +10,18 @@ type ProcessWebhookUseCase struct {
 
 func (u *ProcessWebhookUseCase) ProcessEvent(payload GitHubPayload) error {
 
-	// PASO A: Validar reglas para release
+	// STEP A: Validate rules for release
 	if payload.EventType == "release" && payload.Action != "published" {
 		return nil
 	}
 
-	// PASO B: Validar reglas para pull_request
+	// STEP B: Validate rules for pull_request
 	if payload.EventType == "pull_request" && (payload.Action != "closed" || !payload.PullRequest.Merged) {
 		return nil
 	}
 
-	// PASO C: Impresión de datos capturados
-	fmt.Printf("Se han recibido los datos del evento correctamente")
+	// STEP C: Log captured event data
+	fmt.Printf("Successfully received event data")
 
 	return nil
 }

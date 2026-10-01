@@ -20,13 +20,13 @@ func RunMigrations(databaseURL string, migrationsPath string) error {
 
 	m, err := migrate.New(migrationsPath, databaseURL)
 	if err != nil {
-		return fmt.Errorf("error instanciando motor de migraciones: %w", err)
+		return fmt.Errorf("error instantiating migration engine: %w", err)
 	}
 
 	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
-		return fmt.Errorf("error ejecutando migraciones SQL: %w", err)
+		return fmt.Errorf("error executing SQL migrations: %w", err)
 	}
 
-	log.Println("✅ Auto-migraciones SQL ejecutadas con éxito en Supabase/PostgreSQL")
+	log.Println("✅ SQL auto-migrations executed successfully on Supabase/PostgreSQL")
 	return nil
 }
