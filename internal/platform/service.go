@@ -2,6 +2,7 @@ package platform
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/hawksxo/git-to-feed/internal/approval"
@@ -46,13 +47,20 @@ func (eo *EventOrchestrator) SetNotifier(notifier EventNotifier) {
 func (eo *EventOrchestrator) ProcessGitHubPayload(ctx context.Context, payload webhook.GitHubPayload) (*approval.ApprovalPost, error) {
 	var richCtx pipeline.RichContext
 	var archetype pipeline.Archetype
+	var idempotencyKey string
 
 	if payload.EventType == "release" || payload.Release.TagName != "" {
 		richCtx = eo.contextBuilder.FromRelease(payload.Release, payload.Repository, payload.Sender, nil)
 		archetype = pipeline.ArchetypeRelease
+		if payload.Repository.FullName != "" && payload.Release.TagName != "" {
+			idempotencyKey = fmt.Sprintf("release:%s:%s", payload.Repository.FullName, payload.Release.TagName)
+		}
 	} else {
 		richCtx = eo.contextBuilder.FromPullRequest(payload.PullRequest, payload.Repository, payload.Sender, nil)
 		archetype = pipeline.ArchetypeFeature
+		if payload.Repository.FullName != "" && payload.PullRequest.Title != "" {
+			idempotencyKey = fmt.Sprintf("pr:%s:%s", payload.Repository.FullName, payload.PullRequest.Title)
+		}
 	}
 
 	generatedPost, err := eo.generator.Generate(richCtx, archetype)
@@ -60,7 +68,7 @@ func (eo *EventOrchestrator) ProcessGitHubPayload(ctx context.Context, payload w
 		return nil, err
 	}
 
-	approvalPost, err := eo.approvalUseCase.SubmitForApproval(ctx, generatedPost)
+	approvalPost, err := eo.approvalUseCase.SubmitForApproval(ctx, generatedPost, idempotencyKey)
 	if err != nil {
 		return nil, err
 	}

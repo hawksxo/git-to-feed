@@ -25,13 +25,14 @@ func (s ApprovalStatus) IsValid() bool {
 }
 
 type ApprovalPost struct {
-	UUID          string
-	GeneratedPost pipeline.GeneratedPost
-	Status        ApprovalStatus
-	EditedContent string
-	RejectReason  string
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
+	UUID           string
+	IdempotencyKey string
+	GeneratedPost  pipeline.GeneratedPost
+	Status         ApprovalStatus
+	EditedContent  string
+	RejectReason   string
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
 }
 
 type ApprovalRepository interface {
