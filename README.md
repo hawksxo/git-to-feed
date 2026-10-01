@@ -97,9 +97,13 @@ git-to-feed/
 ├── supabase/
 │   └── migrations/           # SQL Database Schema Migrations (.sql)
 ├── .github/                  # GitHub Workflows, Templates & Community Guidelines
+├── CODE_OF_CONDUCT.md        # Community Contributor Covenant Standards
+├── CONTRIBUTING.md           # Contribution Guidelines & Template Specifications
 ├── Dockerfile                # Multi-stage Production Docker Build
 ├── docker-compose.yml        # Orchestration Config
-└── ROADMAP_EVOLUTION.md      # Future Architectural Roadmap & Evolution Specifications
+├── LICENSE                   # MIT Open-Source License Terms
+├── ROADMAP_EVOLUTION.md      # Future Architectural Roadmap & Evolution Specifications
+└── SECURITY.md               # Responsible Vulnerability Disclosure Policy
 ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -206,6 +210,7 @@ The microservice exposes clean REST HTTP endpoints and granular OpenStatus compo
 - [x] Interactive Discord Bot for Human-in-the-Loop Approvals
 - [x] Automatic PostgreSQL Schema Migration Engine (`supabase/migrations`)
 - [x] Granular OpenStatus Health Monitoring Sub-Endpoints
+- [x] Open-Source Governance Suite (`LICENSE`, `CONTRIBUTING`, `CODE_OF_CONDUCT`, `SECURITY`)
 - [ ] Automated CI/CD Workflows (GitHub Actions)
 - [ ] Event Batching & Aggregation Engine (Frequency Windows)
 
