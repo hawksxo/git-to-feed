@@ -36,8 +36,9 @@
     <li>
       <a href="#about-the-project">About The Project</a>
       <ul>
-        <li><a href="#built-with">Built With</a></li>
+        <li><a href="#system-architecture-flow">System Architecture Flow</a></li>
         <li><a href="#architecture--package-by-feature-layout">Architecture & Package-by-Feature Layout</a></li>
+        <li><a href="#built-with">Built With</a></li>
       </ul>
     </li>
     <li>
@@ -45,11 +46,11 @@
       <ul>
         <li><a href="#prerequisites">Prerequisites</a></li>
         <li><a href="#environment-configuration">Environment Configuration</a></li>
-        <li><a href="#installation--running">Installation & Running</a></li>
+        <li><a href="#docker-containerization-recommended">Docker Containerization (Recommended)</a></li>
+        <li><a href="#local-development">Local Development</a></li>
       </ul>
     </li>
     <li><a href="#usage--api-endpoints">Usage & API Endpoints</a></li>
-    <li><a href="#docker-deployment">Docker Deployment</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
@@ -93,7 +94,8 @@ git-to-feed/
 │       ├── discord/          # Interactive Discord Bot (discordgo WebSocket & Embed Buttons)
 │       ├── http/             # HTTP Server Router & Endpoint Wire-up
 │       └── storage/          # Database Drivers (PostgreSQL/Supabase & SQL Auto-Migrations Engine)
-├── migrations/               # SQL Database Schema Migrations (.sql)
+├── supabase/
+│   └── migrations/           # SQL Database Schema Migrations (.sql)
 ├── .github/                  # GitHub Workflows, Templates & Community Guidelines
 ├── Dockerfile                # Multi-stage Production Docker Build
 ├── docker-compose.yml        # Orchestration Config
@@ -115,60 +117,76 @@ git-to-feed/
 <!-- GETTING STARTED -->
 ## Getting Started
 
-Follow these steps to set up `git-to-feed` locally for development and testing.
+Follow these steps to set up and run `git-to-feed`.
 
 ### Prerequisites
 
-* **Go 1.22+**: [Install Go](https://go.dev/dl/)
-* **Docker & Docker Compose** (Optional for containerization)
+* **Docker & Docker Compose** (Recommended for production & local execution)
+* **Go 1.22+** (Optional for local Go CLI development)
 
 ### Environment Configuration
 
-Create a `.env` file in the root directory (see `.env.example`):
+Create a `.env` file in the root directory (refer to `.env.example`):
 
 ```ini
 PORT=":8080"
 GITHUB_WEBHOOK_SECRET="your-github-webhook-secret"
 LINKEDIN_ACCESS_TOKEN="your-linkedin-access-token"
 LINKEDIN_AUTHOR_URN="urn:li:person:your-author-urn"
-DATABASE_URL="postgresql://user:password@host:5432/dbname?sslmode=require"
+DATABASE_URL="postgres://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres?sslmode=require"
 DISCORD_BOT_TOKEN="your-discord-bot-token"
 DISCORD_CHANNEL_ID="your-discord-channel-id"
 GEMINI_API_KEY="your-google-gemini-api-key"
 GEMINI_MODEL_NAME="gemini-3.5-flash-lite"
 ```
 
-### Installation & Running
+### Docker Containerization (Recommended)
 
-1. Clone the repository:
-   ```sh
-   git clone https://github.com/hawksxo/git-to-feed.git
-   cd git-to-feed
-   ```
-2. Download dependencies:
-   ```sh
-   go mod download
-   ```
-3. Run the application:
-   ```sh
-   go run cmd/api/main.go
-   ```
-4. Run tests & static analysis:
-   ```sh
-   go vet ./...
-   go test -v ./...
-   ```
+Run the application stack using Docker Compose:
+
+```sh
+docker-compose up --build -d
+```
+
+Or build and run using Docker CLI directly:
+
+```sh
+docker build -t git-to-feed:latest .
+docker run -d -p 8080:8080 --env-file .env git-to-feed:latest
+```
+
+### Local Development
+
+For building and testing directly with the Go toolchain:
+
+```sh
+# Download Go module dependencies
+go mod download
+
+# Run the API server locally
+go run cmd/api/main.go
+
+# Run unit tests & static analysis
+go vet ./...
+go test -v ./...
+```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- USAGE -->
 ## Usage & API Endpoints
 
-The microservice exposes clean REST HTTP endpoints:
+The microservice exposes clean REST HTTP endpoints and granular OpenStatus component health monitoring:
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `GET` | `/health` | Application health check (`200 OK`) |
+| `GET` | `/health` | Global application health check (`200 OK`) |
+| `GET` | `/health/api-router` | Health check for HTTP API Router component |
+| `GET` | `/health/webhook-engine` | Health check for GitHub Webhook Ingestion engine |
+| `GET` | `/health/pipeline-gemini` | Health check for Google Gemini AI Pipeline |
+| `GET` | `/health/discord-bot` | Health check for Discord Interactive Bot session |
+| `GET` | `/health/linkedin-engine` | Health check for LinkedIn API Publishing engine |
+| `GET` | `/health/database` | Live `db.Ping()` health check for Supabase PostgreSQL |
 | `POST` | `/api/v1/webhooks/github` | Ingests and processes GitHub Webhook events |
 | `GET` | `/api/v1/approvals/pending` | Lists all draft posts awaiting approval |
 | `POST` | `/api/v1/approvals/{uuid}/approve` | Approves and publishes a draft post to LinkedIn |
@@ -179,24 +197,6 @@ The microservice exposes clean REST HTTP endpoints:
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-<!-- DOCKER DEPLOYMENT -->
-## Docker Deployment
-
-Build and run using Docker Compose:
-
-```sh
-docker-compose up --build -d
-```
-
-Or using Docker CLI directly:
-
-```sh
-docker build -t git-to-feed:latest .
-docker run -d -p 8080:8080 --env-file .env git-to-feed:latest
-```
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 <!-- ROADMAP -->
 ## Roadmap
 
@@ -204,9 +204,10 @@ docker run -d -p 8080:8080 --env-file .env git-to-feed:latest
 - [x] Google Gemini AI Integration with Curated Few-Shot Engineering
 - [x] Anti-Cringe & Payload Sanitization Filters
 - [x] Interactive Discord Bot for Human-in-the-Loop Approvals
-- [x] Automatic PostgreSQL Schema Migration Engine
+- [x] Automatic PostgreSQL Schema Migration Engine (`supabase/migrations`)
+- [x] Granular OpenStatus Health Monitoring Sub-Endpoints
+- [ ] Automated CI/CD Workflows (GitHub Actions)
 - [ ] Event Batching & Aggregation Engine (Frequency Windows)
-- [ ] Multi-Tenant Repository Rules & Custom Prompts
 
 See [ROADMAP_EVOLUTION.md](ROADMAP_EVOLUTION.md) for full architectural roadmap specifications.
 
