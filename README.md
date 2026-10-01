@@ -66,12 +66,12 @@
 ### System Architecture Flow
 
 ```mermaid
-graph TD
-    GH["GitHub Webhook"] -->|HMAC Verified| WH["Webhook Handler"]
+flowchart TD
+    GH["GitHub Webhook"] -->|"HMAC Verified"| WH["Webhook Handler"]
     WH --> PIPE["Pipeline Gemini AI"]
     PIPE --> BOT["Discord Bot"]
-    BOT -->|Approve/Reject| APP["Approval Engine"]
-    APP -->|Published| LI["LinkedIn API"]
+    BOT -->|"Approve / Reject"| APP["Approval Engine"]
+    APP -->|"Published"| LI["LinkedIn API"]
 ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
