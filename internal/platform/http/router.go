@@ -219,6 +219,20 @@ func NewRouter(cfg *config.Config) http.Handler {
 			_ = json.Unmarshal(bodyBytes, &payload)
 		}
 
+		// STEP 1: Strict release action filtering (only process published or released events)
+		if eventType == "release" && payload.Action != "published" && payload.Action != "released" {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(fmt.Sprintf(`{"status":"OK","message":"Release action '%s' ignored"}`, payload.Action)))
+			return
+		}
+
+		// STEP 2: Strict pull request action filtering (only process merged pull requests)
+		if eventType == "pull_request" && (payload.Action != "closed" || !payload.PullRequest.Merged) {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(fmt.Sprintf(`{"status":"OK","message":"PullRequest action '%s' (merged=%t) ignored"}`, payload.Action, payload.PullRequest.Merged)))
+			return
+		}
+
 		approvalPost, err := orchestrator.ProcessGitHubPayload(r.Context(), payload)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
