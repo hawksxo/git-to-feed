@@ -84,18 +84,18 @@ func NewRouter(cfg *config.Config) http.Handler {
 
 	orchestrator := platform.NewEventOrchestrator(approvalUseCase, postProcessor, publishUseCase)
 
-	// Inicializacion opcional del Bot de Discord para aprobaciones interactivas
+	// Optional initialization of Discord Bot for interactive approvals
 	if cfg.DiscordBotToken != "" && cfg.DiscordChannelID != "" {
 		bot, err := discord.NewBot(cfg.DiscordBotToken, cfg.DiscordChannelID, orchestrator)
 		if err == nil {
 			orchestrator.SetNotifier(bot)
 		} else {
-			fmt.Printf("⚠️ Advertencia: No se pudo conectar el Bot de Discord: %v\n", err)
+			fmt.Printf("⚠️ Warning: Failed to connect Discord Bot: %v\n", err)
 		}
 	}
 
 	mux.HandleFunc("POST /api/v1/webhooks/github", func(w http.ResponseWriter, r *http.Request) {
-		// Validacion de evento GitHub Webhook HMAC
+		// GitHub Webhook HMAC signature validation
 		secret := cfg.GitHubWebhookSecret
 		if secret == "" {
 			secret = "default_dev_secret_git_to_feed"
@@ -103,7 +103,7 @@ func NewRouter(cfg *config.Config) http.Handler {
 		signature := r.Header.Get("X-Hub-Signature-256")
 		bodyBytes, err := io.ReadAll(r.Body)
 		if err != nil {
-			http.Error(w, "Error al leer cuerpo de petición", http.StatusBadRequest)
+			http.Error(w, "Error reading request body", http.StatusBadRequest)
 			return
 		}
 		if signature != "" {
@@ -111,7 +111,7 @@ func NewRouter(cfg *config.Config) http.Handler {
 			mac.Write(bodyBytes)
 			calculatedSignature := "sha256=" + hex.EncodeToString(mac.Sum(nil))
 			if !hmac.Equal([]byte(signature), []byte(calculatedSignature)) {
-				http.Error(w, "Firma inválida", http.StatusUnauthorized)
+				http.Error(w, "Invalid signature", http.StatusUnauthorized)
 				return
 			}
 		}
