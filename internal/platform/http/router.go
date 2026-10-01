@@ -219,8 +219,8 @@ func NewRouter(cfg *config.Config) http.Handler {
 			_ = json.Unmarshal(bodyBytes, &payload)
 		}
 
-		// STEP 1: Strict release action filtering (only process published or released events)
-		if eventType == "release" && payload.Action != "published" && payload.Action != "released" {
+		// STEP 1: Strict canonical release action filtering (only process published events)
+		if eventType == "release" && payload.Action != "published" {
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte(fmt.Sprintf(`{"status":"OK","message":"Release action '%s' ignored"}`, payload.Action)))
 			return
