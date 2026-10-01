@@ -218,18 +218,22 @@ See [ROADMAP_EVOLUTION.md](ROADMAP_EVOLUTION.md) for full architectural roadmap 
 
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
 
+Please review our [Contributing Guidelines](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md) for details on Git Flow, Conventional Commits, Gitmojis, and Pull Request templates.
+
 1. Fork the Project
 2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'feat: add AmazingFeature'`)
+3. Commit your Changes (`git commit -m 'feat(scope): :sparkles: add AmazingFeature'`)
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+5. Open a Pull Request using templates in `.github/PULL_REQUEST_TEMPLATE/`
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- LICENSE -->
 ## License
 
-Distributed under the MIT License. See `LICENSE` for more information.
+Distributed under the MIT License. See [LICENSE](LICENSE) for more information.
+
+For security vulnerabilities and disclosure, please refer to our [Security Policy](SECURITY.md).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
