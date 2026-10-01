@@ -85,8 +85,8 @@ func TestBuildPromptWithoutHumanNotes(t *testing.T) {
 		t.Fatalf("BuildPrompt() unexpected error: %v", err)
 	}
 
-	if !strings.Contains(prompt, "[HUMAN NOTES]\nNone") {
-		t.Errorf("Expected human notes section to be 'None'")
+	if !strings.Contains(prompt, "[NOTAS ADICIONALES DEL DESARROLLADOR]\nNinguna") {
+		t.Errorf("Expected human notes section to be 'Ninguna'")
 	}
 }
 
