@@ -94,8 +94,8 @@ func TestHTTPLinkedInClient_SharePost_HTTP(t *testing.T) {
 
 		client, _ := publisher.NewHTTPLinkedInClient("mock-token", server.Client())
 
-		// Para probar contra el servidor mock de httptest, invocamos mediante mock o interfaz si no reescribimos baseURL
-		// Pero validamos la logica con go vet
+		// To test against httptest mock server, invoke via mock or interface unless baseURL is configurable
+		// Validate logic with go vet
 		_ = client
 	})
 }

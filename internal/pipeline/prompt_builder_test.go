@@ -30,15 +30,15 @@ func TestBuildPromptSuccess(t *testing.T) {
 		t.Fatalf("BuildPrompt() unexpected error: %v", err)
 	}
 
-	if !strings.Contains(prompt, "[SYSTEM INSTRUCTION]") {
-		t.Errorf("Expected prompt to contain [SYSTEM INSTRUCTION]")
+	if !strings.Contains(prompt, "[INSTRUCCIÓN DE SISTEMA]") {
+		t.Errorf("Expected prompt to contain [INSTRUCCIÓN DE SISTEMA]")
 	}
 
-	if !strings.Contains(prompt, "Event Type: release") {
-		t.Errorf("Expected prompt to contain Event Type: release")
+	if !strings.Contains(prompt, "Tipo de Evento: release") {
+		t.Errorf("Expected prompt to contain Tipo de Evento: release")
 	}
 
-	if !strings.Contains(prompt, "Tag: v1.0.0") {
+	if !strings.Contains(prompt, "Versión / Tag: v1.0.0") {
 		t.Errorf("Expected prompt to contain Tag: v1.0.0")
 	}
 
@@ -46,15 +46,15 @@ func TestBuildPromptSuccess(t *testing.T) {
 		t.Errorf("Expected prompt to contain release title")
 	}
 
-	if !strings.Contains(prompt, "Repository: hawksxo/git-to-feed") {
-		t.Errorf("Expected prompt to contain Repository")
+	if !strings.Contains(prompt, "Repositorio: hawksxo/git-to-feed") {
+		t.Errorf("Expected prompt to contain Repositorio")
 	}
 
-	if !strings.Contains(prompt, "Actor: hawksxo") {
-		t.Errorf("Expected prompt to contain Actor: hawksxo")
+	if !strings.Contains(prompt, "Autor: hawksxo") {
+		t.Errorf("Expected prompt to contain Autor: hawksxo")
 	}
 
-	if !strings.Contains(prompt, "URL: https://github.com/hawksxo/git-to-feed") {
+	if !strings.Contains(prompt, "URL de GitHub: https://github.com/hawksxo/git-to-feed") {
 		t.Errorf("Expected prompt to contain URL")
 	}
 
