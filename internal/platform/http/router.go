@@ -56,10 +56,13 @@ func NewRouter(cfg *config.Config) http.Handler {
 			"timestamp": time.Now().UTC().Format(time.RFC3339),
 		})
 	})
+	// Active Discord Bot session reference for active health probing
+	var activeBot *discord.Bot
+
 	mux.HandleFunc("GET /health/discord-bot", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		status := "OPERATIONAL"
-		if cfg.DiscordBotToken == "" || cfg.DiscordChannelID == "" {
+		if activeBot == nil || !activeBot.IsConnected() {
 			status = "DEGRADED"
 		}
 		w.WriteHeader(http.StatusOK)
@@ -178,6 +181,7 @@ func NewRouter(cfg *config.Config) http.Handler {
 	if cfg.DiscordBotToken != "" && cfg.DiscordChannelID != "" {
 		bot, err := discord.NewBot(cfg.DiscordBotToken, cfg.DiscordChannelID, orchestrator)
 		if err == nil {
+			activeBot = bot
 			orchestrator.SetNotifier(bot)
 		} else {
 			fmt.Printf("⚠️ Warning: Failed to connect Discord Bot: %v\n", err)
