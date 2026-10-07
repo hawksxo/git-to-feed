@@ -211,10 +211,13 @@ The microservice exposes clean REST HTTP endpoints and granular OpenStatus compo
 - [x] Automatic PostgreSQL Schema Migration Engine (`supabase/migrations`)
 - [x] Granular OpenStatus Health Monitoring Sub-Endpoints
 - [x] Open-Source Governance Suite (`LICENSE`, `CONTRIBUTING`, `CODE_OF_CONDUCT`, `SECURITY`)
-- [ ] Automated CI/CD Workflows (GitHub Actions)
-- [ ] Event Batching & Aggregation Engine (Frequency Windows)
+- [ ] **Milestone v1.1.0 (Foundation & Infrastructure)**:
+  - [ ] Automated CI/CD Workflows & Supabase Migrations ([#57](https://github.com/hawksxo/git-to-feed/issues/57))
+  - [ ] Multi-Channel Discord Event Routing & Graceful Fallback ([#58](https://github.com/hawksxo/git-to-feed/issues/58))
+  - [ ] Interactive 1-Click Discard Action & Lazy TTL Lifecycle ([#59](https://github.com/hawksxo/git-to-feed/issues/59))
+  - [ ] GitHub REST Platform Adapter Client Suite ([#60](https://github.com/hawksxo/git-to-feed/issues/60))
 
-See [ROADMAP_EVOLUTION.md](ROADMAP_EVOLUTION.md) for full architectural roadmap specifications.
+Track progress via [Milestone v1.1.0](https://github.com/hawksxo/git-to-feed/milestone/1) and review full architecture specifications in [ROADMAP_EVOLUTION.md](ROADMAP_EVOLUTION.md).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
