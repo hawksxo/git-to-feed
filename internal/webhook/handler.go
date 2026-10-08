@@ -49,13 +49,13 @@ func (h *Handler) HandleWebhook(w http.ResponseWriter, r *http.Request) {
 	switch eventType {
 	case "ping":
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprintln(w, `{"status": "OK", "message": "Pong"}`)
+		_, _ = fmt.Fprintln(w, `{"status": "OK", "message": "Pong"}`)
 		return
 	case "release", "pull_request":
 		// Allowed event: proceed with execution
 	default:
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprintln(w, `{"status": "OK", "message": "Event ignored"}`)
+		_, _ = fmt.Fprintln(w, `{"status": "OK", "message": "Event ignored"}`)
 		return
 	}
 
@@ -78,5 +78,5 @@ func (h *Handler) HandleWebhook(w http.ResponseWriter, r *http.Request) {
 
 	// STEP C: Respond to HTTP client
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprintln(w, `{"status": "OK", "message": "Listening Event"}`)
+	_, _ = fmt.Fprintln(w, `{"status": "OK", "message": "Listening Event"}`)
 }

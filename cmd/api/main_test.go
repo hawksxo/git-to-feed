@@ -34,7 +34,7 @@ func TestFullE2EFlow(t *testing.T) {
 		if err != nil {
 			t.Fatalf("error haciendo GET /health: %v", err)
 		}
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 
 		if resp.StatusCode != http.StatusOK {
 			t.Errorf("se esperaba status 200 OK, se obtuvo %d", resp.StatusCode)
@@ -67,7 +67,7 @@ func TestFullE2EFlow(t *testing.T) {
 		if err != nil {
 			t.Fatalf("error enviando POST /approve: %v", err)
 		}
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 
 		// 3. Confirmar que el flujo completo hasta LinkedIn termino con exito
 		publishedRecord, err := orchestrator.ApproveAndPublish(ctx, pendingPost.UUID)

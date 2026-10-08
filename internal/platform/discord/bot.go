@@ -18,7 +18,7 @@ type Bot struct {
 
 func NewBot(token string, channelID string, orchestrator *platform.EventOrchestrator) (*Bot, error) {
 	if token == "" || channelID == "" {
-		return nil, fmt.Errorf("Discord token and channelID are required")
+		return nil, fmt.Errorf("discord token and channelID are required")
 	}
 
 	dg, err := discordgo.New("Bot " + token)
