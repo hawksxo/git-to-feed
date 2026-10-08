@@ -106,7 +106,7 @@ func (c *HTTPLinkedInClient) SharePost(ctx context.Context, authorURN string, te
 	if err != nil {
 		return "", fmt.Errorf("error ejecutando request a linkedin: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := io.ReadAll(resp.Body)

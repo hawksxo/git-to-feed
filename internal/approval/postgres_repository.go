@@ -87,7 +87,7 @@ func (r *PostgresApprovalRepository) FindAllPending(ctx context.Context) ([]Appr
 	if err != nil {
 		return nil, fmt.Errorf("error consultando approval_posts pendientes: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var posts []ApprovalPost
 	for rows.Next() {
@@ -110,6 +110,9 @@ func (r *PostgresApprovalRepository) FindAllPending(ctx context.Context) ([]Appr
 		post.GeneratedPost.Archetype = pipeline.Archetype(archetypeStr)
 		post.Status = ApprovalStatus(statusStr)
 		posts = append(posts, post)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterando aprobaciones: %w", err)
 	}
 
 	return posts, nil

@@ -106,7 +106,7 @@ func NewRouter(cfg *config.Config) http.Handler {
 				})
 				return
 			}
-			db.Close()
+			_ = db.Close()
 		}
 		w.WriteHeader(http.StatusOK)
 		_ = json.NewEncoder(w).Encode(map[string]any{
@@ -213,7 +213,7 @@ func NewRouter(cfg *config.Config) http.Handler {
 		eventType := r.Header.Get("X-GitHub-Event")
 		if eventType == "ping" {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"status":"OK","message":"Pong"}`))
+			_, _ = w.Write([]byte(`{"status":"OK","message":"Pong"}`))
 			return
 		}
 
@@ -226,14 +226,14 @@ func NewRouter(cfg *config.Config) http.Handler {
 		// STEP 1: Strict canonical release action filtering (only process published events)
 		if eventType == "release" && payload.Action != "published" {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(fmt.Sprintf(`{"status":"OK","message":"Release action '%s' ignored"}`, payload.Action)))
+			_, _ = w.Write(fmt.Appendf(nil, `{"status":"OK","message":"Release action '%s' ignored"}`, payload.Action))
 			return
 		}
 
 		// STEP 2: Strict pull request action filtering (only process merged pull requests)
 		if eventType == "pull_request" && (payload.Action != "closed" || !payload.PullRequest.Merged) {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(fmt.Sprintf(`{"status":"OK","message":"PullRequest action '%s' (merged=%t) ignored"}`, payload.Action, payload.PullRequest.Merged)))
+			_, _ = w.Write(fmt.Appendf(nil, `{"status":"OK","message":"PullRequest action '%s' (merged=%t) ignored"}`, payload.Action, payload.PullRequest.Merged))
 			return
 		}
 
@@ -244,7 +244,7 @@ func NewRouter(cfg *config.Config) http.Handler {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(fmt.Sprintf(`{"status":"CREATED","uuid":"%s"}`, approvalPost.UUID)))
+		_, _ = w.Write(fmt.Appendf(nil, `{"status":"CREATED","uuid":"%s"}`, approvalPost.UUID))
 	})
 
 	mux.HandleFunc("POST /api/v1/approvals/{uuid}/approve", func(w http.ResponseWriter, r *http.Request) {
@@ -256,7 +256,7 @@ func NewRouter(cfg *config.Config) http.Handler {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(fmt.Sprintf(`{"status":"PUBLISHED","share_urn":"%s"}`, pubRecord.LinkedInShareURN)))
+		_, _ = w.Write(fmt.Appendf(nil, `{"status":"PUBLISHED","share_urn":"%s"}`, pubRecord.LinkedInShareURN))
 	})
 
 	return mux
