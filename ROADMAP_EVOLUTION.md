@@ -7,9 +7,9 @@ This document records the architectural roadmap, foundational platform modules, 
 # 🧱 PART I: FOUNDATIONAL PLATFORM MODULES (BASE)
 > **Active Target Milestone:** [v1.1.0 - Foundation & Infrastructure Modules](https://github.com/hawksxo/git-to-feed/milestone/1)
 
-## 1. ⚙️ Automated CI/CD Pipelines ([Issue #57](https://github.com/hawksxo/git-to-feed/issues/57))
+## 1. ⚙️ Automated CI/CD Pipelines ([Issue #57](https://github.com/hawksxo/git-to-feed/issues/57)) - COMPLETED ✅
 - **Scenario:** Manual verification tests and container-coupled database migrations introduce deployment race conditions and lack automated quality barriers.
-- **Current State:** Manual release branch workflow; zero automated PR branch protection gates.
+- **Current State:** Implemented via GitHub Actions (`ci.yml` and `cd.yml`) with branch protection gates on `develop` (Completed in PR #67).
 - **Architectural Invariant:** Strict separation of concerns. Decouple database migrations from container startup; enforce fail-fast automated testing before merging.
 - **Deliverables:**
   - **CI Workflow (`.github/workflows/ci.yml`)**: Triggered on PRs to `develop`/`release`. Runs `go test -race ./...`, `golangci-lint`, and `govulncheck`. Blocks merge on failure.

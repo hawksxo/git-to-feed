@@ -212,7 +212,7 @@ The microservice exposes clean REST HTTP endpoints and granular OpenStatus compo
 - [x] Granular OpenStatus Health Monitoring Sub-Endpoints
 - [x] Open-Source Governance Suite (`LICENSE`, `CONTRIBUTING`, `CODE_OF_CONDUCT`, `SECURITY`)
 - [ ] **Milestone v1.1.0 (Foundation & Infrastructure)**:
-  - [ ] Automated CI/CD Workflows & Supabase Migrations ([#57](https://github.com/hawksxo/git-to-feed/issues/57))
+  - [x] Automated CI/CD Workflows & Supabase Migrations ([#57](https://github.com/hawksxo/git-to-feed/issues/57))
   - [ ] Multi-Channel Discord Event Routing & Graceful Fallback ([#58](https://github.com/hawksxo/git-to-feed/issues/58))
   - [ ] Interactive 1-Click Discard Action & Lazy TTL Lifecycle ([#59](https://github.com/hawksxo/git-to-feed/issues/59))
   - [ ] GitHub REST Platform Adapter Client Suite ([#60](https://github.com/hawksxo/git-to-feed/issues/60))
