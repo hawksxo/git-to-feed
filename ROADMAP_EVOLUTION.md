@@ -17,9 +17,9 @@ This document records the architectural roadmap, foundational platform modules, 
 
 ---
 
-## 2. 📢 Multi-Channel Routing & Graceful Discord Fallback ([Issue #58](https://github.com/hawksxo/git-to-feed/issues/58))
+## 2. 📢 Multi-Channel Routing & Graceful Discord Fallback ([Issue #58](https://github.com/hawksxo/git-to-feed/issues/58)) - COMPLETED ✅
 - **Scenario:** Single notification channel produces visual clutter, mixing major release drafts, minor PR drafts, and publication audit logs.
-- **Current State:** All notifications target a single channel (`DISCORD_CHANNEL_ID`).
+- **Current State:** Implemented multi-channel routing with fallback resolution in `internal/platform/discord` and `internal/platform/config` (Completed in PR #68).
 - **Architectural Invariant:** Decouple category routing into application use cases; enforce backward-compatible graceful fallback if specific channel IDs are omitted.
 - **Deliverables:**
   - Route release cards to `DISCORD_CHANNEL_RELEASES_ID` (`#drafts-releases`).
