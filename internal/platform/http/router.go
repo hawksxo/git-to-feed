@@ -179,12 +179,17 @@ func NewRouter(cfg *config.Config) http.Handler {
 
 	// Optional initialization of Discord Bot for interactive approvals
 	if cfg.DiscordBotToken != "" && cfg.DiscordChannelID != "" {
-		bot, err := discord.NewBot(cfg.DiscordBotToken, cfg.DiscordChannelID, orchestrator)
+		bot, err := discord.NewBot(cfg.DiscordBotToken, discord.ChannelConfig{
+			DefaultChannelID:  cfg.DiscordChannelID,
+			ReleasesChannelID: cfg.DiscordChannelReleasesID,
+			FeaturesChannelID: cfg.DiscordChannelFeaturesID,
+			AuditChannelID:    cfg.DiscordChannelAuditID,
+		}, orchestrator)
 		if err == nil {
 			activeBot = bot
 			orchestrator.SetNotifier(bot)
 		} else {
-			fmt.Printf("⚠️ Warning: Failed to connect Discord Bot: %v\n", err)
+			fmt.Printf("Warning: Failed to connect Discord Bot: %v\n", err)
 		}
 	}
 
@@ -270,10 +275,10 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 		"service":   "git-to-feed",
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
 		"components": map[string]string{
-			"api_router":       "OPERATIONAL",
-			"webhook_engine":   "OPERATIONAL",
-			"pipeline_gemini":  "OPERATIONAL",
-			"discord_bot":      "OPERATIONAL",
+			"api_router":      "OPERATIONAL",
+			"webhook_engine":  "OPERATIONAL",
+			"pipeline_gemini": "OPERATIONAL",
+			"discord_bot":     "OPERATIONAL",
 			"linkedin_engine": "OPERATIONAL",
 		},
 	}
