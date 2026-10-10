@@ -29,9 +29,9 @@ This document records the architectural roadmap, foundational platform modules, 
 
 ---
 
-## 3. 🧹 Interactive Draft Lifecycle & Zero-Cost Housekeeping ([Issue #59](https://github.com/hawksxo/git-to-feed/issues/59))
+## 3. 🧹 Interactive Draft Lifecycle & Zero-Cost Housekeeping ([Issue #59](https://github.com/hawksxo/git-to-feed/issues/59)) - COMPLETED ✅
 - **Scenario:** Unapproved drafts accumulate indefinitely in `PENDING` state in Supabase, cluttering database storage and queries with stale records.
-- **Current State:** Approval cards lack an immediate discard action in Discord; pending drafts have no expiration boundary.
+- **Current State:** Implemented interactive one-click discard button in Discord with atomic optimistic concurrency guards and 14-day Lazy TTL boundary in PostgreSQL (Completed in PR #69).
 - **Architectural Invariant:** 1-click frictionless developer experience; zero persistent background workers (zero CPU/memory bloat on free tiers).
 - **Deliverables:**
   - **One-Click Discard Action (`🔴 Discard`)**: Discord button that atomically transitions post status to `REJECTED` (`reject_reason: manual_discard`) and deactivates the Discord embed.

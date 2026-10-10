@@ -217,7 +217,7 @@ The microservice exposes clean REST HTTP endpoints and granular OpenStatus compo
 - [ ] **Milestone v1.1.0 (Foundation & Infrastructure)**:
   - [x] Automated CI/CD Workflows & Supabase Migrations ([#57](https://github.com/hawksxo/git-to-feed/issues/57))
   - [x] Multi-Channel Discord Event Routing & Graceful Fallback ([#58](https://github.com/hawksxo/git-to-feed/issues/58))
-  - [ ] Interactive 1-Click Discard Action & Lazy TTL Lifecycle ([#59](https://github.com/hawksxo/git-to-feed/issues/59))
+  - [x] Interactive 1-Click Discard Action & Lazy TTL Lifecycle ([#59](https://github.com/hawksxo/git-to-feed/issues/59))
   - [ ] GitHub REST Platform Adapter Client Suite ([#60](https://github.com/hawksxo/git-to-feed/issues/60))
 
 Track progress via [Milestone v1.1.0](https://github.com/hawksxo/git-to-feed/milestone/1) and review full architecture specifications in [ROADMAP_EVOLUTION.md](ROADMAP_EVOLUTION.md).
