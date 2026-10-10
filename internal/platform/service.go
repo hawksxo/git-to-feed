@@ -101,3 +101,11 @@ func (eo *EventOrchestrator) ApproveAndPublish(ctx context.Context, uuid string)
 	}
 	return eo.publishUseCase.Execute(ctx, approvedPost)
 }
+
+func (eo *EventOrchestrator) DiscardDraft(ctx context.Context, uuid string, reason string) (*approval.ApprovalPost, error)  {
+	rejectedPost, err := eo.approvalUseCase.Reject(ctx, uuid, reason)
+	if err != nil {
+		return nil, err
+	}
+	return rejectedPost, nil
+}

@@ -3,6 +3,7 @@ package approval
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/hawksxo/git-to-feed/internal/pipeline"
 )
@@ -127,5 +128,27 @@ func TestListPending(t *testing.T) {
 
 	if len(pending) != 1 {
 		t.Errorf("len(pending) = %d, want %d", len(pending), 1)
+	}
+}
+
+func TestApproveAndRejectExpiredDraft(t *testing.T)  {
+	repo := NewInMemoryApprovalRepository()
+	uc := NewApprovalUseCase(repo)
+	ctx := context.Background()
+
+	appPost, _ := uc.SubmitForApproval(ctx, pipeline.GeneratedPost{Content: "Old post"})
+	appPost.CreatedAt = time.Now().Add(-15 * 24 * time.Hour)
+	_ = repo.Update(ctx, appPost)
+	_, err := uc.Approve(ctx, appPost.UUID)
+	if err != ErrDraftExpired {
+		t.Errorf("Approve() error = %v, want %v", err, ErrDraftExpired)
+	}
+
+	appPost2, _ := uc.SubmitForApproval(ctx, pipeline.GeneratedPost{Content: "Old post"})
+	appPost2.CreatedAt = time.Now().Add(-15 * 24 * time.Hour)
+	_ = repo.Update(ctx, appPost2)
+	_, err2 := uc.Reject(ctx, appPost2.UUID, "discard")
+	if err2 != ErrDraftExpired {
+		t.Errorf("Reject() error = %s, want %s", err2, ErrDraftExpired)
 	}
 }
