@@ -13,11 +13,12 @@ const (
 	StatusPending  ApprovalStatus = "PENDING"
 	StatusApproved ApprovalStatus = "APPROVED"
 	StatusRejected ApprovalStatus = "REJECTED"
+	StatusExpired  ApprovalStatus = "EXPIRED"
 )
 
 func (s ApprovalStatus) IsValid() bool {
 	switch s {
-	case StatusPending, StatusApproved, StatusRejected:
+	case StatusPending, StatusApproved, StatusRejected, StatusExpired:
 		return true
 	default:
 		return false

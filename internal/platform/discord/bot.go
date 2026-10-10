@@ -108,9 +108,9 @@ func (b *Bot) SendApprovalNotification(post *approval.ApprovalPost) error {
 				CustomID: "approve_" + post.UUID,
 			},
 			discordgo.Button{
-				Label:    "❌ Reject",
+				Label:    "🔴 Discard",
 				Style:    discordgo.DangerButton,
-				CustomID: "reject_" + post.UUID,
+				CustomID: "discard_" + post.UUID,
 			},
 		},
 	}
@@ -168,12 +168,20 @@ func (b *Bot) handleInteraction(s *discordgo.Session, i *discordgo.InteractionCr
 		return
 	}
 
-	if len(customID) > 7 && customID[:7] == "reject_" {
+	if len(customID) > 8 && customID[:8] == "discard_" {
+		uuid := customID[8:]
+
 		_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseDeferredMessageUpdate,
 		})
 
-		b.updateMessageStatus(s, i, "❌ DRAFT REJECTED", "The draft has been discarded by the administrator.", 0x808080)
+		postRecord, err := b.orchestrator.DiscardDraft(ctx, uuid, "manual_discard")
+		if err != nil {
+			b.updateMessageStatus(s, i, "🔴 DISCARD FAILED", fmt.Sprintf("Error: %v", err), 0xFF0000)
+			return
+		}
+
+		b.updateMessageStatus(s, i, "🔴 DRAFT DISCARDED", fmt.Sprintf("The draft `%s` has been discarded by the administrator.", postRecord.UUID), 0x808080)
 		return
 	}
 }
