@@ -52,10 +52,22 @@ This document records the architectural roadmap, foundational platform modules, 
 
 ---
 
+## 5. 🧠 Dynamic Few-Shot Prompt Builder & Supabase SSOT ([Issue #56](https://github.com/hawksxo/git-to-feed/issues/56))
+- **Scenario:** `PromptBuilder` uses hardcoded few-shot examples inside binary code, bypassing the existing `few_shot_examples` database table and requiring full binary redeployments to update prompt engineering.
+- **Current State:** Literal examples reside in `internal/pipeline/template.go`; `PostgresFewShotRepository` is not injected into the pipeline generation layer.
+- **Architectural Invariant:** Single Source of Truth (SSOT) via database-driven prompt configuration with graceful in-memory static fallback for resilience against database downtime.
+- **Deliverables:**
+  - Database seed migration (`supabase/migrations/`) populating default few-shot archetypes.
+  - Dependency injection of `FewShotRepository` into `PromptBuilder`.
+  - Dynamic active archetype lookup (`FindActiveByArchetype`) with fail-safe fallback to static instructions.
+  - Unit tests covering dynamic generation and database failure fallback boundaries.
+
+---
+
 # 🚀 PART II: FEATURE & INTELLIGENCE CAPABILITIES
 > **Target Status:** Backlog (Scheduled for future minor milestones)
 
-## 5. 🎯 Context Quality & Tri-Pillar Enrichment ([Issue #61](https://github.com/hawksxo/git-to-feed/issues/61))
+## 6. 🎯 Context Quality & Tri-Pillar Enrichment ([Issue #61](https://github.com/hawksxo/git-to-feed/issues/61))
 - **Scenario:** Pull Requests or Releases with brief descriptions restrict Gemini AI output fidelity ("Garbage In, Garbage Out").
 - **Current State:** Generation depends strictly on PR template markdown; `HumanNotes` domain entity is disconnected from external inputs.
 - **Architectural Invariant:** Ground generation in real structural changes, developer guidance, and persistent repository identity.
@@ -66,7 +78,7 @@ This document records the architectural roadmap, foundational platform modules, 
 
 ---
 
-## 6. 👑 Event Hierarchy Resolution ([Issue #62](https://github.com/hawksxo/git-to-feed/issues/62))
+## 7. 👑 Event Hierarchy Resolution ([Issue #62](https://github.com/hawksxo/git-to-feed/issues/62))
 - **Scenario:** A PR draft is generated in Discord, and shortly after a `Release Tag` is published containing the changes from that PR.
 - **Current State:** Both events produce competing drafts in `approval_posts` (state `PENDING`).
 - **Architectural Invariant:** GitHub Compare API as Single Source of Truth; atomic status invalidation.
@@ -77,7 +89,7 @@ This document records the architectural roadmap, foundational platform modules, 
 
 ---
 
-## 7. 🩺 Extended Health Probes & Dependency Observability ([Issue #63](https://github.com/hawksxo/git-to-feed/issues/63))
+## 8. 🩺 Extended Health Probes & Dependency Observability ([Issue #63](https://github.com/hawksxo/git-to-feed/issues/63))
 - **Scenario:** Silent failures occur when external dependencies (GitHub token, Gemini API key, Discord channels) degrade.
 - **Current State:** Active probes limited to database connection and Discord Gateway WebSocket (`/health/discord-bot`).
 - **Architectural Invariant:** Non-intrusive synthetic sub-endpoints reporting upstream health without leaking credentials.
@@ -88,7 +100,7 @@ This document records the architectural roadmap, foundational platform modules, 
 
 ---
 
-## 8. 📜 Consolidated Version Digest & Adaptive Synthesis Engine ([Issue #64](https://github.com/hawksxo/git-to-feed/issues/64))
+## 9. 📜 Consolidated Version Digest & Adaptive Synthesis Engine ([Issue #64](https://github.com/hawksxo/git-to-feed/issues/64))
 - **Scenario:** Major and minor releases lose depth when iterative patch histories (`v1.0.1`...`v1.0.7`) are fragmented across individual drafts.
 - **Current State:** Version drafts only reflect immediate tag release notes without historical awareness of predecessor patches.
 - **Architectural Invariant:** Coordinated triggers (automated milestone vs. manual on-demand) backed by database idempotency and reusable GitHub Compare infrastructure.
@@ -99,7 +111,7 @@ This document records the architectural roadmap, foundational platform modules, 
 
 ---
 
-## 9. 🔄 24h Daily Cadence Rule & Staging Event Queue ([Issue #65](https://github.com/hawksxo/git-to-feed/issues/65))
+## 10. 🔄 24h Daily Cadence Rule & Staging Event Queue ([Issue #65](https://github.com/hawksxo/git-to-feed/issues/65))
 - **Scenario:** Multiple PRs and rapid patches published on the same day flood LinkedIn feeds with low-value atomic posts.
 - **Current State:** System reactively generates an isolated draft per event.
 - **Architectural Invariant:** Maximum one single publication per 24-hour cycle.
@@ -109,7 +121,7 @@ This document records the architectural roadmap, foundational platform modules, 
 
 ---
 
-## 10. 🛡️ External API Resilience, Circuit Breaker & Retry Mechanism ([Issue #66](https://github.com/hawksxo/git-to-feed/issues/66))
+## 11. 🛡️ External API Resilience, Circuit Breaker & Retry Mechanism ([Issue #66](https://github.com/hawksxo/git-to-feed/issues/66))
 - **Scenario:** Transient external API rate limits (LinkedIn `HTTP 429`, Gemini timeouts) cause permanent pipeline drops.
 - **Current State:** Errors result in immediate rejection without deferred retries.
 - **Architectural Invariant:** Non-blocking exponential backoff with jitter and explicit recoverable error states.
