@@ -139,6 +139,9 @@ LINKEDIN_ACCESS_TOKEN="your-linkedin-access-token"
 LINKEDIN_AUTHOR_URN="urn:li:person:your-author-urn"
 DATABASE_URL="postgres://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres?sslmode=require"
 DISCORD_BOT_TOKEN="your-discord-bot-token"
+DISCORD_CHANNEL_RELEASES_ID="your-discord-channel-releases-id"
+DISCORD_CHANNEL_FEATURES_ID="your-discord-channel-features-id"
+DISCORD_CHANNEL_AUDIT_ID="your-discord-channel-audit-id"
 DISCORD_CHANNEL_ID="your-discord-channel-id"
 GEMINI_API_KEY="your-google-gemini-api-key"
 GEMINI_MODEL_NAME="gemini-3.5-flash-lite"
@@ -211,10 +214,14 @@ The microservice exposes clean REST HTTP endpoints and granular OpenStatus compo
 - [x] Automatic PostgreSQL Schema Migration Engine (`supabase/migrations`)
 - [x] Granular OpenStatus Health Monitoring Sub-Endpoints
 - [x] Open-Source Governance Suite (`LICENSE`, `CONTRIBUTING`, `CODE_OF_CONDUCT`, `SECURITY`)
-- [ ] Automated CI/CD Workflows (GitHub Actions)
-- [ ] Event Batching & Aggregation Engine (Frequency Windows)
+- [x] **Milestone v1.1.0 (Foundation & Infrastructure)**:
+  - [x] Automated CI/CD Workflows & Supabase Migrations ([#57](https://github.com/hawksxo/git-to-feed/issues/57))
+  - [x] Multi-Channel Discord Event Routing & Graceful Fallback ([#58](https://github.com/hawksxo/git-to-feed/issues/58))
+  - [x] Interactive 1-Click Discard Action & Lazy TTL Lifecycle ([#59](https://github.com/hawksxo/git-to-feed/issues/59))
+  - [x] GitHub REST Platform Adapter Client Suite ([#60](https://github.com/hawksxo/git-to-feed/issues/60))
+  - [x] Dynamic Few-Shot Prompt Builder & Supabase SSOT ([#56](https://github.com/hawksxo/git-to-feed/issues/56))
 
-See [ROADMAP_EVOLUTION.md](ROADMAP_EVOLUTION.md) for full architectural roadmap specifications.
+Track progress via [Milestone v1.1.0](https://github.com/hawksxo/git-to-feed/milestone/1) and review full architecture specifications in [ROADMAP_EVOLUTION.md](ROADMAP_EVOLUTION.md).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

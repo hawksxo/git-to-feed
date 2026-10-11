@@ -106,7 +106,7 @@ func NewRouter(cfg *config.Config) http.Handler {
 				})
 				return
 			}
-			db.Close()
+			_ = db.Close()
 		}
 		w.WriteHeader(http.StatusOK)
 		_ = json.NewEncoder(w).Encode(map[string]any{
@@ -175,16 +175,21 @@ func NewRouter(cfg *config.Config) http.Handler {
 
 	publishUseCase, _ := publisher.NewPublishApprovedPostUseCase(linkedInClient, publisherRepo, cfg.LinkedInAuthorURN)
 
-	orchestrator := platform.NewEventOrchestrator(approvalUseCase, postProcessor, publishUseCase)
+	orchestrator := platform.NewEventOrchestrator(approvalUseCase, postProcessor, publishUseCase, fewShotRepo)
 
 	// Optional initialization of Discord Bot for interactive approvals
 	if cfg.DiscordBotToken != "" && cfg.DiscordChannelID != "" {
-		bot, err := discord.NewBot(cfg.DiscordBotToken, cfg.DiscordChannelID, orchestrator)
+		bot, err := discord.NewBot(cfg.DiscordBotToken, discord.ChannelConfig{
+			DefaultChannelID:  cfg.DiscordChannelID,
+			ReleasesChannelID: cfg.DiscordChannelReleasesID,
+			FeaturesChannelID: cfg.DiscordChannelFeaturesID,
+			AuditChannelID:    cfg.DiscordChannelAuditID,
+		}, orchestrator)
 		if err == nil {
 			activeBot = bot
 			orchestrator.SetNotifier(bot)
 		} else {
-			fmt.Printf("⚠️ Warning: Failed to connect Discord Bot: %v\n", err)
+			fmt.Printf("Warning: Failed to connect Discord Bot: %v\n", err)
 		}
 	}
 
@@ -213,7 +218,7 @@ func NewRouter(cfg *config.Config) http.Handler {
 		eventType := r.Header.Get("X-GitHub-Event")
 		if eventType == "ping" {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"status":"OK","message":"Pong"}`))
+			_, _ = w.Write([]byte(`{"status":"OK","message":"Pong"}`))
 			return
 		}
 
@@ -226,14 +231,14 @@ func NewRouter(cfg *config.Config) http.Handler {
 		// STEP 1: Strict canonical release action filtering (only process published events)
 		if eventType == "release" && payload.Action != "published" {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(fmt.Sprintf(`{"status":"OK","message":"Release action '%s' ignored"}`, payload.Action)))
+			_, _ = w.Write(fmt.Appendf(nil, `{"status":"OK","message":"Release action '%s' ignored"}`, payload.Action))
 			return
 		}
 
 		// STEP 2: Strict pull request action filtering (only process merged pull requests)
 		if eventType == "pull_request" && (payload.Action != "closed" || !payload.PullRequest.Merged) {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(fmt.Sprintf(`{"status":"OK","message":"PullRequest action '%s' (merged=%t) ignored"}`, payload.Action, payload.PullRequest.Merged)))
+			_, _ = w.Write(fmt.Appendf(nil, `{"status":"OK","message":"PullRequest action '%s' (merged=%t) ignored"}`, payload.Action, payload.PullRequest.Merged))
 			return
 		}
 
@@ -244,7 +249,7 @@ func NewRouter(cfg *config.Config) http.Handler {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(fmt.Sprintf(`{"status":"CREATED","uuid":"%s"}`, approvalPost.UUID)))
+		_, _ = w.Write(fmt.Appendf(nil, `{"status":"CREATED","uuid":"%s"}`, approvalPost.UUID))
 	})
 
 	mux.HandleFunc("POST /api/v1/approvals/{uuid}/approve", func(w http.ResponseWriter, r *http.Request) {
@@ -256,7 +261,7 @@ func NewRouter(cfg *config.Config) http.Handler {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(fmt.Sprintf(`{"status":"PUBLISHED","share_urn":"%s"}`, pubRecord.LinkedInShareURN)))
+		_, _ = w.Write(fmt.Appendf(nil, `{"status":"PUBLISHED","share_urn":"%s"}`, pubRecord.LinkedInShareURN))
 	})
 
 	return mux
@@ -270,10 +275,10 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 		"service":   "git-to-feed",
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
 		"components": map[string]string{
-			"api_router":       "OPERATIONAL",
-			"webhook_engine":   "OPERATIONAL",
-			"pipeline_gemini":  "OPERATIONAL",
-			"discord_bot":      "OPERATIONAL",
+			"api_router":      "OPERATIONAL",
+			"webhook_engine":  "OPERATIONAL",
+			"pipeline_gemini": "OPERATIONAL",
+			"discord_bot":     "OPERATIONAL",
 			"linkedin_engine": "OPERATIONAL",
 		},
 	}

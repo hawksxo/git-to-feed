@@ -133,7 +133,7 @@ func (r *PostgresFewShotRepository) FindActiveByArchetype(ctx context.Context, a
 	if err != nil {
 		return nil, fmt.Errorf("error consultando ejemplos activos: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var result []FewShotExampleEntity
 	for rows.Next() {
@@ -145,6 +145,9 @@ func (r *PostgresFewShotRepository) FindActiveByArchetype(ctx context.Context, a
 		}
 		ex.Archetype = Archetype(archStr)
 		result = append(result, ex)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterando ejemplos activos: %w", err)
 	}
 	return result, nil
 }
@@ -159,7 +162,7 @@ func (r *PostgresFewShotRepository) FindAll(ctx context.Context) ([]FewShotExamp
 	if err != nil {
 		return nil, fmt.Errorf("error consultando todos los ejemplos: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var result []FewShotExampleEntity
 	for rows.Next() {
@@ -171,6 +174,9 @@ func (r *PostgresFewShotRepository) FindAll(ctx context.Context) ([]FewShotExamp
 		}
 		ex.Archetype = Archetype(archStr)
 		result = append(result, ex)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterando filas: %w", err)
 	}
 	return result, nil
 }

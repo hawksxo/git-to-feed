@@ -24,7 +24,8 @@ func TestEventOrchestrator_FullFlow(t *testing.T) {
 	publishUseCase, _ := publisher.NewPublishApprovedPostUseCase(mockLinkedInClient, publisherRepo, "urn:li:person:author")
 
 	// 2. Instantiate Orchestrator
-	orchestrator := platform.NewEventOrchestrator(approvalUseCase, postProcessor, publishUseCase)
+	fewShotRepo := pipeline.NewInMemoryFewShotRepository()
+	orchestrator := platform.NewEventOrchestrator(approvalUseCase, postProcessor, publishUseCase, fewShotRepo)
 
 	// 3. Test Ingestion and Generation (ProcessGitHubEvent)
 	approvalPost, err := orchestrator.ProcessGitHubEvent(ctx, "Lanzamos una game-changer feature!", pipeline.ArchetypeFeature)

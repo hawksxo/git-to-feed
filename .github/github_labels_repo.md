@@ -30,3 +30,9 @@ This catalog contains the exact list of labels configured in the repository for 
 - **`high`**: *High priority within the current milestone* (`#D93F0B`)
 - **`medium`**: *Normal priority within the milestone* (`#FBCA04`)
 - **`low`**: *Secondary tasks or aesthetic improvements* (`#0E8A16`)
+
+---
+
+### **4. Tags by Community Engagement (Community / Onboarding)**
+- **`good first issue`**: *Ideal for newcomers and first-time contributors; requires no private infrastructure* (`#7057ff`)
+- **`help wanted`**: *Open task looking for community participation and external PRs* (`#159818`)

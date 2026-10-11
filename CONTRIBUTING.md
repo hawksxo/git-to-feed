@@ -5,12 +5,17 @@ Thank you for your interest in contributing to **`git-to-feed`**! We welcome con
 ---
 
 ## 📜 Table of Contents
-- [Code of Conduct](#-code-of-conduct)
-- [Git Flow & Branching Strategy](#-git-flow--branching-strategy)
-- [Conventional Commits & Gitmoji Standard](#-conventional-commits--gitmoji-standard)
-- [Repository Templates](#-repository-templates)
-- [Clean Architecture & Quality Standards](#-clean-architecture--quality-standards)
-- [How to Submit a Pull Request](#-how-to-submit-a-pull-request)
+- [Contributing to Git-To-Feed 🚀](#contributing-to-git-to-feed-)
+  - [📜 Table of Contents](#-table-of-contents)
+  - [🤝 Code of Conduct](#-code-of-conduct)
+  - [🌿 Branching Strategy \& Delivery Flow](#-branching-strategy--delivery-flow)
+  - [💬 Conventional Commits \& Gitmoji Standard](#-conventional-commits--gitmoji-standard)
+    - [Commit Syntax](#commit-syntax)
+    - [Examples:](#examples)
+  - [📋 Repository Templates](#-repository-templates)
+  - [🏗️ Clean Architecture \& Quality Standards](#️-clean-architecture--quality-standards)
+  - [🚀 How to Submit a Pull Request](#-how-to-submit-a-pull-request)
+  - [🎯 Finding Issues to Work On](#-finding-issues-to-work-on)
 
 ---
 
@@ -19,12 +24,12 @@ By participating in this project, you agree to abide by our [Code of Conduct](CO
 
 ---
 
-## 🌿 Git Flow & Branching Strategy
-We strictly follow **Git Flow**:
-- **`main`**: Production-ready release code. Never push directly to `main`.
-- **`release`**: Target branch for production deployments (Render / Supabase).
-- **`develop`**: Integration branch for new features and bug fixes.
+## 🌿 Branching Strategy & Delivery Flow
+We follow an agile, streamlined Git Flow:
+- **`main`**: Production-ready code. Releases and deployment tags (`v*.*.*`) are cut strictly from `main`.
+- **`develop`**: Active integration branch for new features and bug fixes.
 - **Feature Branches**: Branch from `develop` using the naming convention `feature/<short-description>` or `fix/<short-description>`.
+- **Release Promotion**: When a milestone is ready, `develop` is merged into `main` and tagged with the semantic version.
 
 ---
 
@@ -73,3 +78,13 @@ When creating issues or opening pull requests, you **must use our official templ
 3. Verify that `go vet ./...` and `go test ./...` execute cleanly.
 4. Commit your changes using Conventional Commits with Gitmojis in English.
 5. Open a Pull Request targeting the **`develop`** branch using the appropriate template in `.github/PULL_REQUEST_TEMPLATE/`.
+
+---
+
+## 🎯 Finding Issues to Work On
+Before starting development, check our open issues and milestone boards:
+1. **Explore Active Milestones:** Check [Milestone v1.1.0](https://github.com/hawksxo/git-to-feed/milestone/1) to see prioritized tasks for the next release.
+2. **Filter by Community Labels:**
+   - [`good first issue`](https://github.com/hawksxo/git-to-feed/labels/good%20first%20issue): Well-scoped tasks ideal for newcomers that require no private infrastructure or secrets.
+   - [`help wanted`](https://github.com/hawksxo/git-to-feed/labels/help%20wanted): Open tasks where community contributions and PRs are actively welcomed.
+3. **Claim an Issue:** Leave a comment on the issue you wish to tackle so maintainers can assign it to you and avoid duplicate effort.
