@@ -40,9 +40,9 @@ This document records the architectural roadmap, foundational platform modules, 
 
 ---
 
-## 4. 🐙 GitHub Platform Adapter & REST Client Suite ([Issue #60](https://github.com/hawksxo/git-to-feed/issues/60))
+## 4. 🐙 GitHub Platform Adapter & REST Client Suite ([Issue #60](https://github.com/hawksxo/git-to-feed/issues/60)) - COMPLETED ✅
 - **Scenario:** Multiple downstream features (Compare API, diff stats, rate limit probes) require authenticated, resilient communication with GitHub REST API.
-- **Current State:** No dedicated GitHub API client exists; system only parses inbound webhook JSON payloads.
+- **Current State:** Implemented dedicated platform adapter in `internal/platform/github` with rate limit inspection, PR file diffing, and commit range comparison (Completed in PR #70).
 - **Architectural Invariant:** Encapsulate GitHub HTTP communication behind idiomatic Go interfaces with timeout boundaries and rate-limit tracking.
 - **Deliverables:**
   - Package `internal/platform/github` with authenticated client (`GITHUB_TOKEN`).
