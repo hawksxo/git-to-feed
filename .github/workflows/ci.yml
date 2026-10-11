@@ -1,0 +1,32 @@
+name: CI Quality Gates
+
+on:
+    pull_request:
+        branches:
+            - develop
+            - release
+
+jobs:
+    test_and_lint:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v7
+              
+            - name: Setup go environment
+              uses: actions/setup-go@v7
+              with: 
+                go-version-file: 'go.mod'
+
+            - name: Download Go dependencies
+              run: go mod download
+
+            - name: Run unit tests with race detector
+              run: go test -v -race ./...
+
+            - name: Run golangci-lint
+              uses: golangci/golangci-lint-action@v9
+
+            - name: Run security vulnerability check
+              id: govulncheck
+              uses: golang/govulncheck-action@v1
