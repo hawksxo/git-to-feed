@@ -175,7 +175,7 @@ func NewRouter(cfg *config.Config) http.Handler {
 
 	publishUseCase, _ := publisher.NewPublishApprovedPostUseCase(linkedInClient, publisherRepo, cfg.LinkedInAuthorURN)
 
-	orchestrator := platform.NewEventOrchestrator(approvalUseCase, postProcessor, publishUseCase)
+	orchestrator := platform.NewEventOrchestrator(approvalUseCase, postProcessor, publishUseCase, fewShotRepo)
 
 	// Optional initialization of Discord Bot for interactive approvals
 	if cfg.DiscordBotToken != "" && cfg.DiscordChannelID != "" {
