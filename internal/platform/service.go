@@ -24,7 +24,7 @@ type EventOrchestrator struct {
 	notifier        EventNotifier
 }
 
-func NewEventOrchestrator(approvalUseCase *approval.ApprovalUseCase, postProcessor *pipeline.PostProcessor, publishUseCase *publisher.PublishApprovedPostUseCase) *EventOrchestrator {
+func NewEventOrchestrator(approvalUseCase *approval.ApprovalUseCase, postProcessor *pipeline.PostProcessor, publishUseCase *publisher.PublishApprovedPostUseCase, fewShotRepo pipeline.FewShotRepository) *EventOrchestrator {
 	var geminiClient *pipeline.GeminiLLMClient
 	geminiApiKey := os.Getenv("GEMINI_API_KEY")
 	if geminiApiKey != "" {
@@ -36,7 +36,7 @@ func NewEventOrchestrator(approvalUseCase *approval.ApprovalUseCase, postProcess
 		postProcessor:   postProcessor,
 		publishUseCase:  publishUseCase,
 		contextBuilder:  pipeline.NewContextBuilder(),
-		generator:       pipeline.NewDefaultGenerator(geminiClient),
+		generator:       pipeline.NewDefaultGenerator(geminiClient, fewShotRepo),
 	}
 }
 
