@@ -8,7 +8,7 @@ Thank you for your interest in contributing to **`git-to-feed`**! We welcome con
 - [Contributing to Git-To-Feed 🚀](#contributing-to-git-to-feed-)
   - [📜 Table of Contents](#-table-of-contents)
   - [🤝 Code of Conduct](#-code-of-conduct)
-  - [🌿 Git Flow \& Branching Strategy](#-git-flow--branching-strategy)
+  - [🌿 Branching Strategy \& Delivery Flow](#-branching-strategy--delivery-flow)
   - [💬 Conventional Commits \& Gitmoji Standard](#-conventional-commits--gitmoji-standard)
     - [Commit Syntax](#commit-syntax)
     - [Examples:](#examples)
@@ -24,12 +24,12 @@ By participating in this project, you agree to abide by our [Code of Conduct](CO
 
 ---
 
-## 🌿 Git Flow & Branching Strategy
-We strictly follow **Git Flow**:
-- **`main`**: Production-ready release code. Never push directly to `main`.
-- **`release`**: Target branch for production deployments (Render / Supabase).
-- **`develop`**: Integration branch for new features and bug fixes.
+## 🌿 Branching Strategy & Delivery Flow
+We follow an agile, streamlined Git Flow:
+- **`main`**: Production-ready code. Releases and deployment tags (`v*.*.*`) are cut strictly from `main`.
+- **`develop`**: Active integration branch for new features and bug fixes.
 - **Feature Branches**: Branch from `develop` using the naming convention `feature/<short-description>` or `fix/<short-description>`.
+- **Release Promotion**: When a milestone is ready, `develop` is merged into `main` and tagged with the semantic version.
 
 ---
 
