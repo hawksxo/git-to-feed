@@ -80,14 +80,14 @@ func (r *PostgresApprovalRepository) FindAllPending(ctx context.Context) ([]Appr
 	query := `
 		SELECT uuid, content, archetype, status, edited_content, reject_reason, created_at, updated_at
 		FROM approval_posts
-		WHERE status = 'PENDING'
+		WHERE status = 'PENDING' AND created_at >= NOW() - INTERVAL '14 days'
 		ORDER BY created_at DESC
 	`
 	rows, err := r.db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("error consultando approval_posts pendientes: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var posts []ApprovalPost
 	for rows.Next() {
@@ -111,6 +111,9 @@ func (r *PostgresApprovalRepository) FindAllPending(ctx context.Context) ([]Appr
 		post.Status = ApprovalStatus(statusStr)
 		posts = append(posts, post)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterando aprobaciones: %w", err)
+	}
 
 	return posts, nil
 }
@@ -119,7 +122,7 @@ func (r *PostgresApprovalRepository) Update(ctx context.Context, post *ApprovalP
 	query := `
 		UPDATE approval_posts
 		SET status = $1, edited_content = $2, reject_reason = $3, updated_at = $4
-		WHERE uuid = $5
+		WHERE uuid = $5 AND status = 'PENDING'
 	`
 	res, err := r.db.ExecContext(
 		ctx, query,
@@ -135,7 +138,7 @@ func (r *PostgresApprovalRepository) Update(ctx context.Context, post *ApprovalP
 
 	rowsAffected, err := res.RowsAffected()
 	if err == nil && rowsAffected == 0 {
-		return fmt.Errorf("approval_post no encontrado para actualizar")
+		return ErrPostNotPending
 	}
 
 	return nil

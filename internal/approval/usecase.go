@@ -14,6 +14,9 @@ var (
 	ErrInvalidTransition  = errors.New("invalid approval status transition")
 	ErrEmptyRejectReason  = errors.New("reject reason cannot be empty")
 	ErrEmptyEditedContent = errors.New("edited content cannot be empty")
+	ErrPostNotPending     = errors.New("approval post is not in pending status")
+	DraftTTL              = 14 * 24 * time.Hour
+	ErrDraftExpired       = errors.New("approval draft has expired (older than 14 days)")
 )
 
 type ApprovalUseCase struct {
@@ -52,6 +55,13 @@ func (uc *ApprovalUseCase) Approve(ctx context.Context, uuid string) (*ApprovalP
 		return nil, err
 	}
 
+	if time.Since(post.CreatedAt) > DraftTTL {
+		post.Status = StatusExpired
+		post.UpdatedAt = time.Now()
+		_ = uc.repo.Update(ctx, post)
+		return nil, ErrDraftExpired
+	}
+
 	if post.Status != StatusPending {
 		return nil, ErrInvalidTransition
 	}
@@ -74,6 +84,13 @@ func (uc *ApprovalUseCase) Reject(ctx context.Context, uuid string, reason strin
 	post, err := uc.repo.FindByUUID(ctx, uuid)
 	if err != nil {
 		return nil, err
+	}
+
+	if time.Since(post.CreatedAt) > DraftTTL {
+		post.Status = StatusExpired
+		post.UpdatedAt = time.Now()
+		_ = uc.repo.Update(ctx, post)
+		return nil, ErrDraftExpired
 	}
 
 	if post.Status != StatusPending {

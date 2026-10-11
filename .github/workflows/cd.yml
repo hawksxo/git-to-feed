@@ -1,0 +1,22 @@
+name: CD - Supabase Migration & Render Deployment
+
+on:
+    push:
+        tags:
+            - 'v*.*.*'
+
+jobs:
+    migrations_and_deploy:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v7
+
+            - name: Install Supabase CLI
+              uses: supabase/setup-cli@v3
+
+            - name: Run migrations in Supabase
+              run: supabase db push --db-url "${{ secrets.SUPABASE_DB_URL }}"
+
+            - name: Trigger Render deploy hook
+              run: curl -fsSL -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"

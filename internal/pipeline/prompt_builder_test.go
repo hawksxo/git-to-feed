@@ -1,13 +1,14 @@
 package pipeline
 
 import (
+	"context"
 	"strings"
 	"testing"
 	"time"
 )
 
 func TestBuildPromptSuccess(t *testing.T) {
-	pb := NewPromptBuilder()
+	pb := NewPromptBuilder(nil)
 
 	richCtx := RichContext{
 		GitData: GitData{
@@ -25,7 +26,7 @@ func TestBuildPromptSuccess(t *testing.T) {
 		CreatedAt: time.Now(),
 	}
 
-	prompt, err := pb.BuildPrompt(richCtx, ArchetypeRelease)
+	prompt, err := pb.BuildPrompt(context.Background(), richCtx, ArchetypeRelease)
 	if err != nil {
 		t.Fatalf("BuildPrompt() unexpected error: %v", err)
 	}
@@ -64,7 +65,7 @@ func TestBuildPromptSuccess(t *testing.T) {
 }
 
 func TestBuildPromptWithoutHumanNotes(t *testing.T) {
-	pb := NewPromptBuilder()
+	pb := NewPromptBuilder(nil)
 
 	richCtx := RichContext{
 		GitData: GitData{
@@ -80,7 +81,7 @@ func TestBuildPromptWithoutHumanNotes(t *testing.T) {
 		CreatedAt:  time.Now(),
 	}
 
-	prompt, err := pb.BuildPrompt(richCtx, ArchetypeFeature)
+	prompt, err := pb.BuildPrompt(context.Background(), richCtx, ArchetypeFeature)
 	if err != nil {
 		t.Fatalf("BuildPrompt() unexpected error: %v", err)
 	}
@@ -91,7 +92,7 @@ func TestBuildPromptWithoutHumanNotes(t *testing.T) {
 }
 
 func TestBuildPromptInvalidArchetype(t *testing.T) {
-	pb := NewPromptBuilder()
+	pb := NewPromptBuilder(nil)
 
 	richCtx := RichContext{
 		GitData: GitData{
@@ -99,12 +100,52 @@ func TestBuildPromptInvalidArchetype(t *testing.T) {
 		},
 	}
 
-	prompt, err := pb.BuildPrompt(richCtx, Archetype("unknown"))
+	prompt, err := pb.BuildPrompt(context.Background(), richCtx, Archetype("unknown"))
 	if err == nil {
 		t.Errorf("Expected error for invalid archetype, got nil")
 	}
 
 	if prompt != "" {
 		t.Errorf("Expected empty prompt string on error, got %q", prompt)
+	}
+}
+
+func TestBuildPromptFewShotRepo(t *testing.T) {
+	fewShotRepo := NewInMemoryFewShotRepository()
+	err := fewShotRepo.Save(context.Background(), &FewShotExampleEntity{
+		UUID:           "custom-01",
+		Archetype:      ArchetypeRelease,
+		InputContext:   "Custom Input Release Context",
+		ExpectedOutput: "Custom Output: ¡Publicación Dinámica desde BD!",
+		IsActive:       true,
+	})
+	if err != nil {
+		t.Fatalf("unexpected error saving example: %v", err)
+	}
+	pb := NewPromptBuilder(fewShotRepo)
+
+	richCtx := RichContext{
+		GitData: GitData{
+			EventType:   "release",
+			Tag:         "v1.0.0",
+			Title:       "v1.0.0 Release",
+			Description: "HMAC signature verification implemented.",
+			Author:      "hawksxo",
+			Repository:  "hawksxo/git-to-feed",
+			URL:         "https://github.com/hawksxo/git-to-feed",
+		},
+		HumanNotes: &HumanNotes{
+			Notes: "Importante destacar el aspecto de seguridad.",
+		},
+		CreatedAt: time.Now(),
+	}
+
+	prompt, err := pb.BuildPrompt(context.Background(), richCtx, ArchetypeRelease)
+	if err != nil {
+		t.Fatalf("unexpected error building prompt: %v", err)
+	}
+
+	if !strings.Contains(prompt, "Custom Output: ¡Publicación Dinámica desde BD!") {
+		t.Errorf("expected prompt to contain dynamic db example, got: %s", prompt)
 	}
 }

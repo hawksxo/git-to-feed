@@ -1,22 +1,38 @@
 package pipeline
 
-import "fmt"
+import (
+	"context"
+	"fmt"
+)
 
-type PromptBuilder struct{}
-
-func NewPromptBuilder() *PromptBuilder {
-	return &PromptBuilder{}
+type PromptBuilder struct {
+	fewShotRepo FewShotRepository
 }
 
-func (pb *PromptBuilder) BuildPrompt(ctx RichContext, archetype Archetype) (string, error) {
+func NewPromptBuilder(fewShotRepo FewShotRepository) *PromptBuilder {
+	return &PromptBuilder{fewShotRepo: fewShotRepo}
+}
+
+func (pb *PromptBuilder) BuildPrompt(ctx context.Context, richCtx RichContext, archetype Archetype) (string, error) {
 	notesText := "Ninguna"
-	if ctx.HumanNotes != nil && ctx.HumanNotes.Notes != "" {
-		notesText = ctx.HumanNotes.Notes
+	if richCtx.HumanNotes != nil && richCtx.HumanNotes.Notes != "" {
+		notesText = richCtx.HumanNotes.Notes
 	}
 
 	tmpl, err := GetTemplateForArchetype(archetype)
 	if err != nil {
 		return "", err
+	}
+
+	inputContext := tmpl.Example.InputContext
+	outputContext := tmpl.Example.ExpectedOutput
+
+	if pb.fewShotRepo != nil {
+		examples, err := pb.fewShotRepo.FindActiveByArchetype(ctx, archetype)
+		if err == nil && len(examples) > 0 {
+			inputContext = examples[0].InputContext
+			outputContext = examples[0].ExpectedOutput
+		}
 	}
 
 	prompt := fmt.Sprintf(`[INSTRUCCIÓN DE SISTEMA]
@@ -50,15 +66,15 @@ Descripción detallada:
 [NOTAS ADICIONALES DEL DESARROLLADOR]
 %s`,
 		tmpl.SystemInstruction,
-		tmpl.Example.InputContext,
-		tmpl.Example.ExpectedOutput,
-		ctx.GitData.EventType,
-		ctx.GitData.Tag,
-		ctx.GitData.Title,
-		ctx.GitData.Repository,
-		ctx.GitData.Author,
-		ctx.GitData.URL,
-		ctx.GitData.Description,
+		inputContext,
+		outputContext,
+		richCtx.GitData.EventType,
+		richCtx.GitData.Tag,
+		richCtx.GitData.Title,
+		richCtx.GitData.Repository,
+		richCtx.GitData.Author,
+		richCtx.GitData.URL,
+		richCtx.GitData.Description,
 		notesText,
 	)
 

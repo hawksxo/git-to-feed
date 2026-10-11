@@ -7,18 +7,35 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/hawksxo/git-to-feed/internal/approval"
+	"github.com/hawksxo/git-to-feed/internal/pipeline"
 	"github.com/hawksxo/git-to-feed/internal/platform"
 )
 
+type ChannelConfig struct {
+	DefaultChannelID  string
+	ReleasesChannelID string
+	FeaturesChannelID string
+	AuditChannelID    string
+}
+
 type Bot struct {
 	session      *discordgo.Session
-	channelID    string
+	channels     ChannelConfig
 	orchestrator *platform.EventOrchestrator
 }
 
-func NewBot(token string, channelID string, orchestrator *platform.EventOrchestrator) (*Bot, error) {
-	if token == "" || channelID == "" {
-		return nil, fmt.Errorf("Discord token and channelID are required")
+func (b *Bot) resolveChannel(targetChannel string, channelType string) string {
+	if targetChannel != "" {
+		return targetChannel
+	}
+
+	log.Printf("%s channel not configured, falling back to default channel: %s", channelType, b.channels.DefaultChannelID)
+	return b.channels.DefaultChannelID
+}
+
+func NewBot(token string, channels ChannelConfig, orchestrator *platform.EventOrchestrator) (*Bot, error) {
+	if token == "" || channels.DefaultChannelID == "" {
+		return nil, fmt.Errorf("discord token and channelID are required")
 	}
 
 	dg, err := discordgo.New("Bot " + token)
@@ -28,7 +45,7 @@ func NewBot(token string, channelID string, orchestrator *platform.EventOrchestr
 
 	bot := &Bot{
 		session:      dg,
-		channelID:    channelID,
+		channels:     channels,
 		orchestrator: orchestrator,
 	}
 
@@ -38,7 +55,7 @@ func NewBot(token string, channelID string, orchestrator *platform.EventOrchestr
 		return nil, fmt.Errorf("error opening websocket connection with Discord: %w", err)
 	}
 
-	log.Println("🤖 Approval Discord Bot started and listening for interactions successfully")
+	log.Println("Approval Discord Bot started and listening for interactions successfully")
 	return bot, nil
 }
 
@@ -91,14 +108,22 @@ func (b *Bot) SendApprovalNotification(post *approval.ApprovalPost) error {
 				CustomID: "approve_" + post.UUID,
 			},
 			discordgo.Button{
-				Label:    "❌ Reject",
+				Label:    "🔴 Discard",
 				Style:    discordgo.DangerButton,
-				CustomID: "reject_" + post.UUID,
+				CustomID: "discard_" + post.UUID,
 			},
 		},
 	}
 
-	_, err := b.session.ChannelMessageSendComplex(b.channelID, &discordgo.MessageSend{
+	var targetChannel string
+
+	if post.GeneratedPost.Archetype == pipeline.ArchetypeRelease {
+		targetChannel = b.resolveChannel(b.channels.ReleasesChannelID, "releases")
+	} else {
+		targetChannel = b.resolveChannel(b.channels.FeaturesChannelID, "features")
+	}
+
+	_, err := b.session.ChannelMessageSendComplex(targetChannel, &discordgo.MessageSend{
 		Embeds:     []*discordgo.MessageEmbed{embed},
 		Components: []discordgo.MessageComponent{actions},
 	})
@@ -126,6 +151,7 @@ func (b *Bot) handleInteraction(s *discordgo.Session, i *discordgo.InteractionCr
 			Type: discordgo.InteractionResponseDeferredMessageUpdate,
 		})
 
+		auditChannel := b.resolveChannel(b.channels.AuditChannelID, "audit")
 		pubRecord, err := b.orchestrator.ApproveAndPublish(ctx, uuid)
 		if err != nil {
 			b.updateMessageStatus(s, i, "🔴 PUBLICATION FAILED", fmt.Sprintf("Error: %v", err), 0xFF0000)
@@ -133,15 +159,29 @@ func (b *Bot) handleInteraction(s *discordgo.Session, i *discordgo.InteractionCr
 		}
 
 		b.updateMessageStatus(s, i, "✅ PUBLISHED ON LINKEDIN LIVE", fmt.Sprintf("Share URN: %s", pubRecord.LinkedInShareURN), 0x00FF00)
+		auditEmbed := &discordgo.MessageEmbed{
+			Title:       "Live on LinkedIn",
+			Description: fmt.Sprintf("Post approved and successfully published.\n\n**Share URN:** `%s`", pubRecord.LinkedInShareURN),
+			Color:       0x0077B5,
+		}
+		_, _ = s.ChannelMessageSendEmbed(auditChannel, auditEmbed)
 		return
 	}
 
-	if len(customID) > 7 && customID[:7] == "reject_" {
+	if len(customID) > 8 && customID[:8] == "discard_" {
+		uuid := customID[8:]
+
 		_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseDeferredMessageUpdate,
 		})
 
-		b.updateMessageStatus(s, i, "❌ DRAFT REJECTED", "The draft has been discarded by the administrator.", 0x808080)
+		postRecord, err := b.orchestrator.DiscardDraft(ctx, uuid, "manual_discard")
+		if err != nil {
+			b.updateMessageStatus(s, i, "🔴 DISCARD FAILED", fmt.Sprintf("Error: %v", err), 0xFF0000)
+			return
+		}
+
+		b.updateMessageStatus(s, i, "🔴 DRAFT DISCARDED", fmt.Sprintf("The draft `%s` has been discarded by the administrator.", postRecord.UUID), 0x808080)
 		return
 	}
 }
