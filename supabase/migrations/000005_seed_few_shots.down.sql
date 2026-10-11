@@ -1,1 +1,0 @@
-DELETE FROM few_shot_examples WHERE uuid IN ('seed-few-shot-release-01', 'seed-few-shot-feature-01', 'seed-few-shot-refactor-01');
