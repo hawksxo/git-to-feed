@@ -52,9 +52,9 @@ This document records the architectural roadmap, foundational platform modules, 
 
 ---
 
-## 5. 🧠 Dynamic Few-Shot Prompt Builder & Supabase SSOT ([Issue #56](https://github.com/hawksxo/git-to-feed/issues/56))
+## 5. 🧠 Dynamic Few-Shot Prompt Builder & Supabase SSOT ([Issue #56](https://github.com/hawksxo/git-to-feed/issues/56)) - COMPLETED ✅
 - **Scenario:** `PromptBuilder` uses hardcoded few-shot examples inside binary code, bypassing the existing `few_shot_examples` database table and requiring full binary redeployments to update prompt engineering.
-- **Current State:** Literal examples reside in `internal/pipeline/template.go`; `PostgresFewShotRepository` is not injected into the pipeline generation layer.
+- **Current State:** Completed in PR #71. `PromptBuilder` queries `FewShotRepository` dynamically from Supabase/PostgreSQL with fail-safe in-memory template fallback. Seeded via `supabase/migrations/000005_seed_few_shots.up.sql`.
 - **Architectural Invariant:** Single Source of Truth (SSOT) via database-driven prompt configuration with graceful in-memory static fallback for resilience against database downtime.
 - **Deliverables:**
   - Database seed migration (`supabase/migrations/`) populating default few-shot archetypes.
