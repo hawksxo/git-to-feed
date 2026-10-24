@@ -242,6 +242,16 @@ func NewRouter(cfg *config.Config) http.Handler {
 			return
 		}
 
+		// STEP 3: Strict pull request target branch and semantic title filtering
+		if eventType == "pull_request" {
+			shouldProcess, reason := webhook.ShouldProcessPullRequest(payload.PullRequest)
+			if !shouldProcess {
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(fmt.Appendf(nil, `{"status": "OK", "message": "PullRequest ignored: %s"}`, reason))
+				return
+			}
+		}
+
 		approvalPost, err := orchestrator.ProcessGitHubPayload(r.Context(), payload)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

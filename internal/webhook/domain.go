@@ -19,11 +19,16 @@ type ReleaseInfo struct {
 	HTMLURL string `json:"html_url"`
 }
 
+type BaseInfo struct {
+	Ref string `json:"ref"`
+}
+
 type PullRequestInfo struct {
-	Title   string `json:"title"`
-	Body    string `json:"body"`
-	Merged  bool   `json:"merged"`
-	HTMLURL string `json:"html_url"`
+	Title   string   `json:"title"`
+	Body    string   `json:"body"`
+	Merged  bool     `json:"merged"`
+	Base    BaseInfo `json:"base"`
+	HTMLURL string   `json:"html_url"`
 }
 
 type SenderInfo struct {
