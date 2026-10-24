@@ -214,14 +214,19 @@ The microservice exposes clean REST HTTP endpoints and granular OpenStatus compo
 - [x] Automatic PostgreSQL Schema Migration Engine (`supabase/migrations`)
 - [x] Granular OpenStatus Health Monitoring Sub-Endpoints
 - [x] Open-Source Governance Suite (`LICENSE`, `CONTRIBUTING`, `CODE_OF_CONDUCT`, `SECURITY`)
-- [x] **Milestone v1.1.0 (Foundation & Infrastructure)**:
+- [x] **Milestone v1.1.0 (Foundation & Infrastructure)** - CLOSED ✅:
   - [x] Automated CI/CD Workflows & Supabase Migrations ([#57](https://github.com/hawksxo/git-to-feed/issues/57))
   - [x] Multi-Channel Discord Event Routing & Graceful Fallback ([#58](https://github.com/hawksxo/git-to-feed/issues/58))
   - [x] Interactive 1-Click Discard Action & Lazy TTL Lifecycle ([#59](https://github.com/hawksxo/git-to-feed/issues/59))
   - [x] GitHub REST Platform Adapter Client Suite ([#60](https://github.com/hawksxo/git-to-feed/issues/60))
   - [x] Dynamic Few-Shot Prompt Builder & Supabase SSOT ([#56](https://github.com/hawksxo/git-to-feed/issues/56))
+- [ ] **Milestone v1.2.0 (Event Intelligence & Pipeline Filtering)** - IN PROGRESS 🚧:
+  - [x] Semantic PR Title & Target Branch Ingestion Filtering ([#76](https://github.com/hawksxo/git-to-feed/issues/76))
+  - [ ] Tri-Pillar Context Enrichment ([#61](https://github.com/hawksxo/git-to-feed/issues/61))
+  - [ ] Event Hierarchy Resolution & Superseding PR Drafts ([#62](https://github.com/hawksxo/git-to-feed/issues/62))
+  - [ ] Extended Platform Health Probes & Rate Limit Observability ([#63](https://github.com/hawksxo/git-to-feed/issues/63))
 
-Track progress via [Milestone v1.1.0](https://github.com/hawksxo/git-to-feed/milestone/1) and review full architecture specifications in [ROADMAP_EVOLUTION.md](ROADMAP_EVOLUTION.md).
+Track progress via [Milestone v1.2.0](https://github.com/hawksxo/git-to-feed/milestone/2) and review full architecture specifications in [ROADMAP_EVOLUTION.md](ROADMAP_EVOLUTION.md).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

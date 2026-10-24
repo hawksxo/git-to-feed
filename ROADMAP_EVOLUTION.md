@@ -5,7 +5,7 @@ This document records the architectural roadmap, foundational platform modules, 
 ---
 
 # 🧱 PART I: FOUNDATIONAL PLATFORM MODULES (BASE)
-> **Active Target Milestone:** [v1.1.0 - Foundation & Infrastructure Modules](https://github.com/hawksxo/git-to-feed/milestone/1)
+> **Milestone Status:** [v1.1.0 - Foundation & Infrastructure Modules](https://github.com/hawksxo/git-to-feed/milestone/1) - CLOSED ✅ (100% Completed)
 
 ## 1. ⚙️ Automated CI/CD Pipelines ([Issue #57](https://github.com/hawksxo/git-to-feed/issues/57)) - COMPLETED ✅
 - **Scenario:** Manual verification tests and container-coupled database migrations introduce deployment race conditions and lack automated quality barriers.
@@ -65,9 +65,21 @@ This document records the architectural roadmap, foundational platform modules, 
 ---
 
 # 🚀 PART II: FEATURE & INTELLIGENCE CAPABILITIES
-> **Target Status:** Backlog (Scheduled for future minor milestones)
+> **Active Target Milestone:** [v1.2.0 - Event Intelligence & Pipeline Filtering](https://github.com/hawksxo/git-to-feed/milestone/2)
 
-## 6. 🎯 Context Quality & Tri-Pillar Enrichment ([Issue #61](https://github.com/hawksxo/git-to-feed/issues/61))
+## 6. 🛡️ Semantic PR Title & Target Branch Ingestion Filtering ([Issue #76](https://github.com/hawksxo/git-to-feed/issues/76)) - COMPLETED ✅
+- **Scenario:** Every merged pull request triggers AI post generation and approval cards in Discord regardless of branch or maintenance scope (`chore:`, `docs:`, `ci:`, `style:`, `test:`), producing webhook noise and depleting Gemini quota.
+- **Current State:** Implemented via pure policy `ShouldProcessPullRequest` in `internal/webhook/filter.go` and integrated as an early return guard in `internal/platform/http/router.go` (Completed in PR #77).
+- **Architectural Invariant:** Early Fail-Fast HTTP 200 acknowledgment with structured JSON rejection message; strict branch parity ensuring only `develop` target merges with deliverable prefixes (`feat:`, `refactor:`, `perf:`) reach the orchestrator.
+- **Deliverables:**
+  - `BaseInfo` struct capturing `pull_request.base.ref` in `internal/webhook/domain.go`.
+  - Pure domain policy `ShouldProcessPullRequest` in `internal/webhook/filter.go`.
+  - Comprehensive unit test suite in `internal/webhook/filter_test.go`.
+  - HTTP router early return guard in `internal/platform/http/router.go`.
+
+---
+
+## 7. 🎯 Context Quality & Tri-Pillar Enrichment ([Issue #61](https://github.com/hawksxo/git-to-feed/issues/61))
 - **Scenario:** Pull Requests or Releases with brief descriptions restrict Gemini AI output fidelity ("Garbage In, Garbage Out").
 - **Current State:** Generation depends strictly on PR template markdown; `HumanNotes` domain entity is disconnected from external inputs.
 - **Architectural Invariant:** Ground generation in real structural changes, developer guidance, and persistent repository identity.
@@ -78,7 +90,7 @@ This document records the architectural roadmap, foundational platform modules, 
 
 ---
 
-## 7. 👑 Event Hierarchy Resolution ([Issue #62](https://github.com/hawksxo/git-to-feed/issues/62))
+## 8. 👑 Event Hierarchy Resolution ([Issue #62](https://github.com/hawksxo/git-to-feed/issues/62))
 - **Scenario:** A PR draft is generated in Discord, and shortly after a `Release Tag` is published containing the changes from that PR.
 - **Current State:** Both events produce competing drafts in `approval_posts` (state `PENDING`).
 - **Architectural Invariant:** GitHub Compare API as Single Source of Truth; atomic status invalidation.
@@ -89,7 +101,7 @@ This document records the architectural roadmap, foundational platform modules, 
 
 ---
 
-## 8. 🩺 Extended Health Probes & Dependency Observability ([Issue #63](https://github.com/hawksxo/git-to-feed/issues/63))
+## 9. 🩺 Extended Health Probes & Dependency Observability ([Issue #63](https://github.com/hawksxo/git-to-feed/issues/63))
 - **Scenario:** Silent failures occur when external dependencies (GitHub token, Gemini API key, Discord channels) degrade.
 - **Current State:** Active probes limited to database connection and Discord Gateway WebSocket (`/health/discord-bot`).
 - **Architectural Invariant:** Non-intrusive synthetic sub-endpoints reporting upstream health without leaking credentials.
@@ -100,7 +112,10 @@ This document records the architectural roadmap, foundational platform modules, 
 
 ---
 
-## 9. 📜 Consolidated Version Digest & Adaptive Synthesis Engine ([Issue #64](https://github.com/hawksxo/git-to-feed/issues/64))
+# 🌐 PART III: ADVANCED SYNTHESIS, CADENCE & PLATFORM RESILIENCE
+> **Target Status:** Backlog (Scheduled for Milestone v1.3.0+ Evolution)
+
+## 10. 📜 Consolidated Version Digest & Adaptive Synthesis Engine ([Issue #64](https://github.com/hawksxo/git-to-feed/issues/64))
 - **Scenario:** Major and minor releases lose depth when iterative patch histories (`v1.0.1`...`v1.0.7`) are fragmented across individual drafts.
 - **Current State:** Version drafts only reflect immediate tag release notes without historical awareness of predecessor patches.
 - **Architectural Invariant:** Coordinated triggers (automated milestone vs. manual on-demand) backed by database idempotency and reusable GitHub Compare infrastructure.
@@ -111,7 +126,7 @@ This document records the architectural roadmap, foundational platform modules, 
 
 ---
 
-## 10. 🔄 24h Daily Cadence Rule & Staging Event Queue ([Issue #65](https://github.com/hawksxo/git-to-feed/issues/65))
+## 11. 🔄 24h Daily Cadence Rule & Staging Event Queue ([Issue #65](https://github.com/hawksxo/git-to-feed/issues/65))
 - **Scenario:** Multiple PRs and rapid patches published on the same day flood LinkedIn feeds with low-value atomic posts.
 - **Current State:** System reactively generates an isolated draft per event.
 - **Architectural Invariant:** Maximum one single publication per 24-hour cycle.
@@ -121,7 +136,7 @@ This document records the architectural roadmap, foundational platform modules, 
 
 ---
 
-## 11. 🛡️ External API Resilience, Circuit Breaker & Retry Mechanism ([Issue #66](https://github.com/hawksxo/git-to-feed/issues/66))
+## 12. 🛡️ External API Resilience, Circuit Breaker & Retry Mechanism ([Issue #66](https://github.com/hawksxo/git-to-feed/issues/66))
 - **Scenario:** Transient external API rate limits (LinkedIn `HTTP 429`, Gemini timeouts) cause permanent pipeline drops.
 - **Current State:** Errors result in immediate rejection without deferred retries.
 - **Architectural Invariant:** Non-blocking exponential backoff with jitter and explicit recoverable error states.
