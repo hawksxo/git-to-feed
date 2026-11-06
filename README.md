@@ -222,7 +222,7 @@ The microservice exposes clean REST HTTP endpoints and granular OpenStatus compo
   - [x] Dynamic Few-Shot Prompt Builder & Supabase SSOT ([#56](https://github.com/hawksxo/git-to-feed/issues/56))
 - [ ] **Milestone v1.2.0 (Event Intelligence & Pipeline Filtering)** - IN PROGRESS 🚧:
   - [x] Semantic PR Title & Target Branch Ingestion Filtering ([#76](https://github.com/hawksxo/git-to-feed/issues/76))
-  - [ ] Tri-Pillar Context Enrichment ([#61](https://github.com/hawksxo/git-to-feed/issues/61))
+  - [x] Tri-Pillar Context Enrichment ([#61](https://github.com/hawksxo/git-to-feed/issues/61))
   - [ ] Event Hierarchy Resolution & Superseding PR Drafts ([#62](https://github.com/hawksxo/git-to-feed/issues/62))
   - [ ] Extended Platform Health Probes & Rate Limit Observability ([#63](https://github.com/hawksxo/git-to-feed/issues/63))
 
