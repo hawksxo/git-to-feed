@@ -48,8 +48,6 @@ func (pb *PromptBuilder) BuildPrompt(ctx context.Context, richCtx RichContext, a
 		}
 	}
 
-	const defaultProjectIdentity = "git"
-
 	prompt := fmt.Sprintf(`[INSTRUCCIÓN DE SISTEMA]
 %s
 
