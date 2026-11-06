@@ -16,14 +16,29 @@ type HumanNotes struct {
 	Notes string
 }
 
+type FileDiff struct {
+	Path      string
+	Additions int
+	Deletions int
+}
+
+type DiffStats struct {
+	TotalFiles int
+	Additions  int
+	Deletions  int
+	Files      []FileDiff
+}
+
 type RichContext struct {
-	GitData    GitData
-	HumanNotes *HumanNotes
-	CreatedAt  time.Time
+	GitData         GitData
+	DiffStats       *DiffStats
+	HumanNotes      *HumanNotes
+	ProjectIdentity string
+	CreatedAt       time.Time
 }
 
 type GeneratedPost struct {
-	Content string
+	Content   string
 	Archetype Archetype
 	CreatedAt time.Time
 }

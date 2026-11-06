@@ -4,15 +4,21 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/hawksxo/git-to-feed/internal/approval"
 	"github.com/hawksxo/git-to-feed/internal/pipeline"
+	"github.com/hawksxo/git-to-feed/internal/platform/github"
 	"github.com/hawksxo/git-to-feed/internal/publisher"
 	"github.com/hawksxo/git-to-feed/internal/webhook"
 )
 
 type EventNotifier interface {
 	SendApprovalNotification(post *approval.ApprovalPost) error
+}
+
+type PullRequestFilesInspector interface {
+	GetPullRequestFiles(ctx context.Context, owner, repo string, pullNumber int) ([]github.PullRequestFile, error)
 }
 
 type EventOrchestrator struct {
@@ -22,9 +28,11 @@ type EventOrchestrator struct {
 	contextBuilder  *pipeline.ContextBuilder
 	generator       *pipeline.DefaultGenerator
 	notifier        EventNotifier
+	prInspector     PullRequestFilesInspector
 }
 
-func NewEventOrchestrator(approvalUseCase *approval.ApprovalUseCase, postProcessor *pipeline.PostProcessor, publishUseCase *publisher.PublishApprovedPostUseCase, fewShotRepo pipeline.FewShotRepository) *EventOrchestrator {
+func NewEventOrchestrator(approvalUseCase *approval.ApprovalUseCase, postProcessor *pipeline.PostProcessor,
+	publishUseCase *publisher.PublishApprovedPostUseCase, fewShotRepo pipeline.FewShotRepository, prInspector PullRequestFilesInspector) *EventOrchestrator {
 	var geminiClient *pipeline.GeminiLLMClient
 	geminiApiKey := os.Getenv("GEMINI_API_KEY")
 	if geminiApiKey != "" {
@@ -37,6 +45,7 @@ func NewEventOrchestrator(approvalUseCase *approval.ApprovalUseCase, postProcess
 		publishUseCase:  publishUseCase,
 		contextBuilder:  pipeline.NewContextBuilder(),
 		generator:       pipeline.NewDefaultGenerator(geminiClient, fewShotRepo),
+		prInspector:     prInspector,
 	}
 }
 
@@ -56,8 +65,41 @@ func (eo *EventOrchestrator) ProcessGitHubPayload(ctx context.Context, payload w
 			idempotencyKey = fmt.Sprintf("release:%s:%s", payload.Repository.FullName, payload.Release.TagName)
 		}
 	} else {
-		richCtx = eo.contextBuilder.FromPullRequest(payload.PullRequest, payload.Repository, payload.Sender, nil)
+		var diffStats *pipeline.DiffStats
+
+		if eo.prInspector != nil && payload.PullRequest.Number > 0 {
+			parts := strings.Split(payload.Repository.FullName, "/")
+
+			if len(parts) == 2 {
+				owner := parts[0]
+				repo := parts[1]
+
+				files, err := eo.prInspector.GetPullRequestFiles(ctx, owner, repo, payload.PullRequest.Number)
+				if err == nil && len(files) > 0 {
+					var totalAdd, totalDel int
+					var fileDiffs []pipeline.FileDiff
+					for _, f := range files {
+						totalAdd += f.Additions
+						totalDel += f.Deletions
+						fileDiffs = append(fileDiffs, pipeline.FileDiff{
+							Path: f.Filename,
+							Additions: f.Additions,
+							Deletions: f.Deletions,
+						})
+					}
+					diffStats = &pipeline.DiffStats{
+						TotalFiles: len(files),
+						Additions: totalAdd,
+						Deletions: totalDel,
+						Files: fileDiffs,
+					}
+				}
+			}
+		}
+
+		richCtx = eo.contextBuilder.FromPullRequest(payload.PullRequest, payload.Repository, payload.Sender, diffStats, nil)
 		archetype = pipeline.ArchetypeFeature
+
 		if payload.Repository.FullName != "" && payload.PullRequest.Title != "" {
 			idempotencyKey = fmt.Sprintf("pr:%s:%s", payload.Repository.FullName, payload.PullRequest.Title)
 		}
@@ -102,7 +144,7 @@ func (eo *EventOrchestrator) ApproveAndPublish(ctx context.Context, uuid string)
 	return eo.publishUseCase.Execute(ctx, approvedPost)
 }
 
-func (eo *EventOrchestrator) DiscardDraft(ctx context.Context, uuid string, reason string) (*approval.ApprovalPost, error)  {
+func (eo *EventOrchestrator) DiscardDraft(ctx context.Context, uuid string, reason string) (*approval.ApprovalPost, error) {
 	rejectedPost, err := eo.approvalUseCase.Reject(ctx, uuid, reason)
 	if err != nil {
 		return nil, err

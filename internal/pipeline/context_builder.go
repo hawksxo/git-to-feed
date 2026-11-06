@@ -26,11 +26,12 @@ func (cb *ContextBuilder) FromRelease(release webhook.ReleaseInfo, repo webhook.
 			URL:         release.HTMLURL,
 		},
 		HumanNotes: copyHumanNotes(notes),
+		ProjectIdentity: repo.Description,
 		CreatedAt:  time.Now(),
 	}
 }
 
-func (cb *ContextBuilder) FromPullRequest(pr webhook.PullRequestInfo, repo webhook.RepositoryInfo, sender webhook.SenderInfo, notes *HumanNotes) RichContext {
+func (cb *ContextBuilder) FromPullRequest(pr webhook.PullRequestInfo, repo webhook.RepositoryInfo, sender webhook.SenderInfo, diffstats *DiffStats, notes *HumanNotes) RichContext {
 	cleanDescription := SanitizeText(pr.Body)
 
 	return RichContext{
@@ -43,7 +44,9 @@ func (cb *ContextBuilder) FromPullRequest(pr webhook.PullRequestInfo, repo webho
 			Repository:  repo.FullName,
 			URL:         pr.HTMLURL,
 		},
+		DiffStats:  diffstats,
 		HumanNotes: copyHumanNotes(notes),
+		ProjectIdentity: repo.Description,
 		CreatedAt:  time.Now(),
 	}
 }

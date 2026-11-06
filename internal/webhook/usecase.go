@@ -20,6 +20,11 @@ func (u *ProcessWebhookUseCase) ProcessEvent(payload GitHubPayload) error {
 		return nil
 	}
 
+	// STEP D: Validate rules for issue_comment
+	if payload.EventType == "issue_comment" && (payload.Action != "created" || payload.Issue.PullRequest == nil) {
+		return nil
+	}
+
 	// STEP C: Log captured event data
 	fmt.Printf("Successfully received event data")
 

@@ -52,7 +52,7 @@ func TestFullE2EFlow(t *testing.T) {
 		publishUseCase, _ := publisher.NewPublishApprovedPostUseCase(mockLinkedInClient, publisherRepo, cfg.LinkedInAuthorURN)
 
 		fewShotRepo := pipeline.NewInMemoryFewShotRepository()
-		orchestrator := platform.NewEventOrchestrator(approvalUseCase, postProcessor, publishUseCase, fewShotRepo)
+		orchestrator := platform.NewEventOrchestrator(approvalUseCase, postProcessor, publishUseCase, fewShotRepo, nil)
 
 		// 1. Simular Ingesta de Evento y Generacion
 		pendingPost, err := orchestrator.ProcessGitHubEvent(ctx, "Lanzamos nueva arquitectura limpia en Go!", pipeline.ArchetypeFeature)

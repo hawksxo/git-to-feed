@@ -149,3 +149,48 @@ func TestBuildPromptFewShotRepo(t *testing.T) {
 		t.Errorf("expected prompt to contain dynamic db example, got: %s", prompt)
 	}
 }
+
+func TestBuildPrompt_WithTriPillarEnrichment(t *testing.T)  {
+	pb := NewPromptBuilder(nil)
+
+	richCtx := RichContext{
+		GitData: GitData{
+			EventType: "pull_request",
+			Title: "feat: tri-pillar enrichment",
+			Repository: "hawksxo/git-to-feed",
+		},
+		DiffStats: &DiffStats{
+			TotalFiles: 1,
+			Additions: 25,
+			Deletions: 5,
+			Files: []FileDiff{
+				{
+					Path: "internal/pipeline/domain.go",
+					Additions: 25,
+					Deletions: 5,
+				},
+			},
+		},
+		HumanNotes: &HumanNotes{
+			Notes: "Enriqueciendo contexto para evitar alucinaciones",
+		},
+		CreatedAt: time.Now(),
+	}
+
+	prompt, err := pb.BuildPrompt(context.Background(), richCtx, ArchetypeFeature)
+	if err != nil {
+		t.Fatalf("unexpected error building prompt: %v", err)
+	}
+
+	if !strings.Contains(prompt, "[MÉTRICAS DE DIFF Y ARCHIVOS TOCADOS]") {
+		t.Errorf("expected prompt to contain [MÉTRICAS DE DIFF Y ARCHIVOS TOCADOS]")
+	}
+
+	if !strings.Contains(prompt, "internal/pipeline/domain.go (+25 / -5)") {
+		t.Errorf("expected prompt to contain file diff metrics")
+	}
+
+	if !strings.Contains(prompt, "[IDENTIDAD Y ARQUITECTURA DEL PROYECTO]") {
+		t.Errorf("expected prompt to contain [IDENTIDAD Y ARQUITECTURA DEL PROYECTO]")
+	}
+}

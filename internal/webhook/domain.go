@@ -24,6 +24,7 @@ type BaseInfo struct {
 }
 
 type PullRequestInfo struct {
+	Number  int      `json:"number"`
 	Title   string   `json:"title"`
 	Body    string   `json:"body"`
 	Merged  bool     `json:"merged"`
@@ -35,6 +36,15 @@ type SenderInfo struct {
 	User string `json:"login"`
 }
 
+type CommentInfo struct {
+	Body string `json:"body"`
+}
+
+type IssueInfo struct {
+	Number      int       `json:"number"`
+	PullRequest *struct{} `json:"pull_request"`
+}
+
 type GitHubPayload struct {
 	Action      string          `json:"action"`
 	EventType   string          `json:"-"`
@@ -42,4 +52,6 @@ type GitHubPayload struct {
 	PullRequest PullRequestInfo `json:"pull_request"`
 	Repository  RepositoryInfo  `json:"repository"`
 	Sender      SenderInfo      `json:"sender"`
+	Comment     CommentInfo     `json:"comment"`
+	Issue       IssueInfo       `json:"issue"`
 }

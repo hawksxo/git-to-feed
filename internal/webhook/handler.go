@@ -51,7 +51,7 @@ func (h *Handler) HandleWebhook(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = fmt.Fprintln(w, `{"status": "OK", "message": "Pong"}`)
 		return
-	case "release", "pull_request":
+	case "release", "pull_request", "issue_comment":
 		// Allowed event: proceed with execution
 	default:
 		w.WriteHeader(http.StatusOK)

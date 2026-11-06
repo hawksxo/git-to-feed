@@ -25,7 +25,7 @@ func TestEventOrchestrator_FullFlow(t *testing.T) {
 
 	// 2. Instantiate Orchestrator
 	fewShotRepo := pipeline.NewInMemoryFewShotRepository()
-	orchestrator := platform.NewEventOrchestrator(approvalUseCase, postProcessor, publishUseCase, fewShotRepo)
+	orchestrator := platform.NewEventOrchestrator(approvalUseCase, postProcessor, publishUseCase, fewShotRepo, nil)
 
 	// 3. Test Ingestion and Generation (ProcessGitHubEvent)
 	approvalPost, err := orchestrator.ProcessGitHubEvent(ctx, "Lanzamos una game-changer feature!", pipeline.ArchetypeFeature)
