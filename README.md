@@ -223,7 +223,7 @@ The microservice exposes clean REST HTTP endpoints and granular OpenStatus compo
 - [ ] **Milestone v1.2.0 (Event Intelligence & Pipeline Filtering)** - IN PROGRESS 🚧:
   - [x] Semantic PR Title & Target Branch Ingestion Filtering ([#76](https://github.com/hawksxo/git-to-feed/issues/76))
   - [x] Tri-Pillar Context Enrichment ([#61](https://github.com/hawksxo/git-to-feed/issues/61))
-  - [ ] Event Hierarchy Resolution & Superseding PR Drafts ([#62](https://github.com/hawksxo/git-to-feed/issues/62))
+  - [x] Event Hierarchy Resolution & Superseding PR Drafts ([#62](https://github.com/hawksxo/git-to-feed/issues/62))
   - [ ] Extended Platform Health Probes & Rate Limit Observability ([#63](https://github.com/hawksxo/git-to-feed/issues/63))
 
 Track progress via [Milestone v1.2.0](https://github.com/hawksxo/git-to-feed/milestone/2) and review full architecture specifications in [ROADMAP_EVOLUTION.md](ROADMAP_EVOLUTION.md).

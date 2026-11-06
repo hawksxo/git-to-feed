@@ -90,7 +90,7 @@ This document records the architectural roadmap, foundational platform modules, 
 
 ---
 
-## 8. 👑 Event Hierarchy Resolution ([Issue #62](https://github.com/hawksxo/git-to-feed/issues/62))
+## 8. 👑 Event Hierarchy Resolution ([Issue #62](https://github.com/hawksxo/git-to-feed/issues/62)) - COMPLETED ✅
 - **Scenario:** A PR draft is generated in Discord, and shortly after a `Release Tag` is published containing the changes from that PR.
 - **Current State:** Both events produce competing drafts in `approval_posts` (state `PENDING`).
 - **Architectural Invariant:** GitHub Compare API as Single Source of Truth; atomic status invalidation.
