@@ -11,7 +11,7 @@ func TestContextBuilderFromRelease(t *testing.T) {
 
 	release := webhook.ReleaseInfo{
 		TagName: "v1.0.0",
-		Name: "v1.0.0",
+		Name:    "v1.0.0",
 		Body:    "<!-- comment --> Release Body",
 		HTMLURL: "https://github.com/hawksxo/git-to-feed",
 	}
@@ -67,12 +67,12 @@ func TestContextBuilderFromRelease(t *testing.T) {
 	}
 }
 
-func TestContextBuilderFromPullRequest(t *testing.T)  {
+func TestContextBuilderFromPullRequest(t *testing.T) {
 	cb := NewContextBuilder()
 
 	pr := webhook.PullRequestInfo{
-		Title: "Integration pipeline module",
-		Body: "- [ ] Task pending\n- [X] Task done",
+		Title:   "Integration pipeline module",
+		Body:    "- [ ] Task pending\n- [X] Task done",
 		HTMLURL: "https://github.com/hawksxo/git-to-feed",
 	}
 
@@ -86,7 +86,7 @@ func TestContextBuilderFromPullRequest(t *testing.T)  {
 
 	var note *HumanNotes = nil
 
-	ctx := cb.FromPullRequest(pr, repository, sender, note)
+	ctx := cb.FromPullRequest(pr, repository, sender, nil, note)
 
 	if ctx.GitData.EventType != "pull_request" {
 		t.Errorf("EventType = %q, want %q", ctx.GitData.EventType, "pull_request")
@@ -108,11 +108,66 @@ func TestContextBuilderFromPullRequest(t *testing.T)  {
 		t.Errorf("URL = %q, want %q", ctx.GitData.URL, "https://github.com/hawksxo/git-to-feed")
 	}
 
+	if ctx.DiffStats != nil {
+		t.Errorf("DiffStats = %v, want nil", ctx.DiffStats)
+	}
+
 	if ctx.HumanNotes != nil {
 		t.Errorf("Expected HumanNotes to be present, got nil")
 	}
 
 	if ctx.CreatedAt.IsZero() {
 		t.Errorf("Expected CreatedAt to be set, but got zero time")
+	}
+}
+
+func TestContextBuilderFromPullRequestWithDiffStats(t *testing.T) {
+	cb := NewContextBuilder()
+
+	pr := webhook.PullRequestInfo{
+		Title:   "Integration pipeline module",
+		Body:    "- [ ] Task pending\n- [X] Task done",
+		HTMLURL: "https://github.com/hawksxo/git-to-feed",
+	}
+
+	repository := webhook.RepositoryInfo{
+		FullName: "hawksxo/git-to-feed",
+	}
+
+	sender := webhook.SenderInfo{
+		User: "hawksxo",
+	}
+
+	diff := &DiffStats{
+		TotalFiles: 2,
+		Additions:  15,
+		Deletions:  3,
+		Files: []FileDiff{
+			{
+				Path:      "main.go",
+				Additions: 10,
+				Deletions: 2,
+			},
+		},
+	}
+
+	var note *HumanNotes = nil
+
+	ctx := cb.FromPullRequest(pr, repository, sender, diff, note)
+
+	if ctx.DiffStats == nil {
+		t.Fatalf("expected DiffStats to be set, got nil")
+	}
+
+	if ctx.DiffStats.TotalFiles != 2 {
+		t.Errorf("TotalFiles = %d, want = %d", ctx.DiffStats.TotalFiles, 2)
+	}
+
+	if ctx.DiffStats.Additions != 15 {
+		t.Errorf("Additions = %d, want = %d", ctx.DiffStats.Additions, 15)
+	}
+
+	if ctx.DiffStats.Deletions != 3 {
+		t.Errorf("Deletions = %d, want = %d", ctx.DiffStats.Deletions, 3)
 	}
 }

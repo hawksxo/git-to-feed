@@ -5,10 +5,10 @@ import (
 	"strings"
 )
 
-func ShouldProcessPullRequest(pr PullRequestInfo) (bool, string)  {
+func ShouldProcessPullRequest(pr PullRequestInfo) (bool, string) {
 	cleanTitle := strings.TrimSpace(strings.ToLower(pr.Title))
 	isValidPrefix := strings.HasPrefix(cleanTitle, "feat:") || strings.HasPrefix(cleanTitle, "refactor:") || strings.HasPrefix(cleanTitle, "perf:")
-	
+
 	if pr.Base.Ref != "develop" {
 		return false, fmt.Sprintf("target branch '%s' is not develop", pr.Base.Ref)
 	}
@@ -18,4 +18,15 @@ func ShouldProcessPullRequest(pr PullRequestInfo) (bool, string)  {
 	}
 
 	return true, ""
+}
+
+func ExtractFeedNotes(commentBody string) string {
+	_, after, found := strings.Cut(commentBody, "/feed-notes")
+
+	if !found {
+		return ""
+	}
+
+	line, _, _ := strings.Cut(after, "\n")
+	return strings.TrimSpace(line)
 }

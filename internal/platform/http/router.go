@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/hawksxo/git-to-feed/internal/approval"
@@ -15,6 +16,7 @@ import (
 	"github.com/hawksxo/git-to-feed/internal/platform"
 	"github.com/hawksxo/git-to-feed/internal/platform/config"
 	"github.com/hawksxo/git-to-feed/internal/platform/discord"
+	"github.com/hawksxo/git-to-feed/internal/platform/github"
 	"github.com/hawksxo/git-to-feed/internal/platform/storage"
 	"github.com/hawksxo/git-to-feed/internal/publisher"
 	"github.com/hawksxo/git-to-feed/internal/webhook"
@@ -175,7 +177,12 @@ func NewRouter(cfg *config.Config) http.Handler {
 
 	publishUseCase, _ := publisher.NewPublishApprovedPostUseCase(linkedInClient, publisherRepo, cfg.LinkedInAuthorURN)
 
-	orchestrator := platform.NewEventOrchestrator(approvalUseCase, postProcessor, publishUseCase, fewShotRepo)
+	var ghClient platform.PullRequestFilesInspector
+	if ghToken := os.Getenv("GITHUB_TOKEN"); ghToken != "" {
+		ghClient = github.NewClient(ghToken, 10*time.Second)
+	}
+
+	orchestrator := platform.NewEventOrchestrator(approvalUseCase, postProcessor, publishUseCase, fewShotRepo, ghClient)
 
 	// Optional initialization of Discord Bot for interactive approvals
 	if cfg.DiscordBotToken != "" && cfg.DiscordChannelID != "" {

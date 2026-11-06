@@ -19,6 +19,19 @@ func (pb *PromptBuilder) BuildPrompt(ctx context.Context, richCtx RichContext, a
 		notesText = richCtx.HumanNotes.Notes
 	}
 
+	diffText := "Ninguno"
+	if richCtx.DiffStats != nil {
+		diffText = fmt.Sprintf("Archivos modificados: %d (+%d / -%d)\n", richCtx.DiffStats.TotalFiles, richCtx.DiffStats.Additions, richCtx.DiffStats.Deletions)
+		for _, f := range richCtx.DiffStats.Files {
+			diffText += fmt.Sprintf("- %s (+%d / -%d)\n", f.Path, f.Additions, f.Deletions)
+		}
+	}
+
+	identityText := "No provista (opcional)"
+	if richCtx.ProjectIdentity != "nil" {
+		identityText = richCtx.ProjectIdentity
+	}
+
 	tmpl, err := GetTemplateForArchetype(archetype)
 	if err != nil {
 		return "", err
@@ -34,6 +47,8 @@ func (pb *PromptBuilder) BuildPrompt(ctx context.Context, richCtx RichContext, a
 			outputContext = examples[0].ExpectedOutput
 		}
 	}
+
+	const defaultProjectIdentity = "git"
 
 	prompt := fmt.Sprintf(`[INSTRUCCIÓN DE SISTEMA]
 %s
@@ -64,6 +79,12 @@ Descripción detallada:
 %s
 
 [NOTAS ADICIONALES DEL DESARROLLADOR]
+%s
+
+[MÉTRICAS DE DIFF Y ARCHIVOS TOCADOS]
+%s
+
+[IDENTIDAD Y ARQUITECTURA DEL PROYECTO]
 %s`,
 		tmpl.SystemInstruction,
 		inputContext,
@@ -76,6 +97,8 @@ Descripción detallada:
 		richCtx.GitData.URL,
 		richCtx.GitData.Description,
 		notesText,
+		diffText,
+		identityText,
 	)
 
 	return prompt, nil
