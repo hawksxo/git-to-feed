@@ -14,8 +14,8 @@ func TestSubmitForApproval(t *testing.T) {
 	ctx := context.Background()
 
 	genPost := pipeline.GeneratedPost{
-		Content:   "Generated LinkedIn content",
-		Archetype: pipeline.ArchetypeRelease,
+		Content:   "Automated Post",
+		Archetype: pipeline.ArchetypeFeature,
 	}
 
 	appPost, err := uc.SubmitForApproval(ctx, genPost)
@@ -24,11 +24,10 @@ func TestSubmitForApproval(t *testing.T) {
 	}
 
 	if appPost.UUID == "" {
-		t.Errorf("Expected non-empty UUID")
+		t.Errorf("expected non-empty UUID")
 	}
-
 	if appPost.Status != StatusPending {
-		t.Errorf("appPost.Status = %q, want %q", appPost.Status, StatusPending)
+		t.Errorf("expected status %v, got %v", StatusPending, appPost.Status)
 	}
 }
 
@@ -39,19 +38,22 @@ func TestApproveSuccessAndTransitionError(t *testing.T) {
 
 	appPost, _ := uc.SubmitForApproval(ctx, pipeline.GeneratedPost{Content: "Test content"})
 
-	approved, err := uc.Approve(ctx, appPost.UUID)
+	approvedPost, err := uc.Approve(ctx, appPost.UUID)
 	if err != nil {
 		t.Fatalf("Approve() unexpected error: %v", err)
 	}
-
-	if approved.Status != StatusApproved {
-		t.Errorf("approved.Status = %q, want %q", approved.Status, StatusApproved)
+	if approvedPost.Status != StatusApproved {
+		t.Errorf("expected status %v, got %v", StatusApproved, approvedPost.Status)
 	}
 
-	// Re-approving an already approved post should fail with transition error
 	_, err = uc.Approve(ctx, appPost.UUID)
 	if err != ErrInvalidTransition {
-		t.Errorf("Approve() re-approval error = %v, want %v", err, ErrInvalidTransition)
+		t.Errorf("expected ErrInvalidTransition on already approved post, got %v", err)
+	}
+
+	_, err = uc.Reject(ctx, appPost.UUID, "Too late")
+	if err != ErrInvalidTransition {
+		t.Errorf("expected ErrInvalidTransition on already approved post, got %v", err)
 	}
 }
 
@@ -62,24 +64,20 @@ func TestRejectSuccessAndEmptyReason(t *testing.T) {
 
 	appPost, _ := uc.SubmitForApproval(ctx, pipeline.GeneratedPost{Content: "Test content"})
 
-	// Empty reason error
 	_, err := uc.Reject(ctx, appPost.UUID, "   ")
 	if err != ErrEmptyRejectReason {
-		t.Errorf("Reject() empty reason error = %v, want %v", err, ErrEmptyRejectReason)
+		t.Errorf("expected ErrEmptyRejectReason, got %v", err)
 	}
 
-	// Valid reject
-	rejected, err := uc.Reject(ctx, appPost.UUID, "Invalid tone")
+	rejectedPost, err := uc.Reject(ctx, appPost.UUID, "Low quality content")
 	if err != nil {
 		t.Fatalf("Reject() unexpected error: %v", err)
 	}
-
-	if rejected.Status != StatusRejected {
-		t.Errorf("rejected.Status = %q, want %q", rejected.Status, StatusRejected)
+	if rejectedPost.Status != StatusRejected {
+		t.Errorf("expected status %v, got %v", StatusRejected, rejectedPost.Status)
 	}
-
-	if rejected.RejectReason != "Invalid tone" {
-		t.Errorf("rejected.RejectReason = %q, want %q", rejected.RejectReason, "Invalid tone")
+	if rejectedPost.RejectReason != "Low quality content" {
+		t.Errorf("expected reject reason 'Low quality content', got %v", rejectedPost.RejectReason)
 	}
 }
 
@@ -90,24 +88,25 @@ func TestEditAndApprove(t *testing.T) {
 
 	appPost, _ := uc.SubmitForApproval(ctx, pipeline.GeneratedPost{Content: "Original content"})
 
-	// Empty content error
 	_, err := uc.EditAndApprove(ctx, appPost.UUID, "")
 	if err != ErrEmptyEditedContent {
-		t.Errorf("EditAndApprove() empty content error = %v, want %v", err, ErrEmptyEditedContent)
+		t.Errorf("expected ErrEmptyEditedContent, got %v", err)
 	}
 
-	// Valid edit and approve
-	edited, err := uc.EditAndApprove(ctx, appPost.UUID, "Edited content for LinkedIn")
+	editedPost, err := uc.EditAndApprove(ctx, appPost.UUID, "Refined high-value post")
 	if err != nil {
 		t.Fatalf("EditAndApprove() unexpected error: %v", err)
 	}
-
-	if edited.Status != StatusApproved {
-		t.Errorf("edited.Status = %q, want %q", edited.Status, StatusApproved)
+	if editedPost.Status != StatusApproved {
+		t.Errorf("expected status %v, got %v", StatusApproved, editedPost.Status)
+	}
+	if editedPost.EditedContent != "Refined high-value post" {
+		t.Errorf("expected edited content 'Refined high-value post', got %v", editedPost.EditedContent)
 	}
 
-	if edited.EditedContent != "Edited content for LinkedIn" {
-		t.Errorf("edited.EditedContent = %q, want %q", edited.EditedContent, "Edited content for LinkedIn")
+	stored, _ := repo.FindByUUID(ctx, appPost.UUID)
+	if stored.EditedContent != "Refined high-value post" {
+		t.Errorf("stored post does not reflect edited content")
 	}
 }
 
@@ -125,13 +124,12 @@ func TestListPending(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ListPending() unexpected error: %v", err)
 	}
-
 	if len(pending) != 1 {
-		t.Errorf("len(pending) = %d, want %d", len(pending), 1)
+		t.Errorf("expected 1 pending post, got %d", len(pending))
 	}
 }
 
-func TestApproveAndRejectExpiredDraft(t *testing.T)  {
+func TestApproveAndRejectExpiredDraft(t *testing.T) {
 	repo := NewInMemoryApprovalRepository()
 	uc := NewApprovalUseCase(repo)
 	ctx := context.Background()
@@ -139,16 +137,41 @@ func TestApproveAndRejectExpiredDraft(t *testing.T)  {
 	appPost, _ := uc.SubmitForApproval(ctx, pipeline.GeneratedPost{Content: "Old post"})
 	appPost.CreatedAt = time.Now().Add(-15 * 24 * time.Hour)
 	_ = repo.Update(ctx, appPost)
+
 	_, err := uc.Approve(ctx, appPost.UUID)
 	if err != ErrDraftExpired {
-		t.Errorf("Approve() error = %v, want %v", err, ErrDraftExpired)
+		t.Errorf("Approve() error = %s, want %s", err, ErrDraftExpired)
 	}
 
 	appPost2, _ := uc.SubmitForApproval(ctx, pipeline.GeneratedPost{Content: "Old post"})
 	appPost2.CreatedAt = time.Now().Add(-15 * 24 * time.Hour)
 	_ = repo.Update(ctx, appPost2)
-	_, err2 := uc.Reject(ctx, appPost2.UUID, "discard")
+
+	_, err2 := uc.Reject(ctx, appPost2.UUID, "rejected after expired")
 	if err2 != ErrDraftExpired {
 		t.Errorf("Reject() error = %s, want %s", err2, ErrDraftExpired)
+	}
+}
+
+func TestSupersedeDrafts(t *testing.T) {
+	repo := NewInMemoryApprovalRepository()
+	uc := NewApprovalUseCase(repo)
+	ctx := context.Background()
+
+	draft, _ := uc.SubmitForApproval(ctx, pipeline.GeneratedPost{Content: "New post"})
+	err := uc.SupersedeDrafts(ctx, []string{draft.UUID}, "v1.2.0")
+	if err != nil {
+		t.Fatalf("SupersedeDrafts() unexpected error: %v", err)
+	}
+
+	postFind, err := repo.FindByUUID(ctx, draft.UUID)
+	if err != nil {
+		t.Fatalf("FindByUUID() unexpected error: %v", err)
+	}
+	if postFind.Status != StatusSupersededByRelease {
+		t.Errorf("post.Status = %s, want %s", postFind.Status, StatusSupersededByRelease)
+	}
+	if postFind.SupersededBy != "v1.2.0" {
+		t.Errorf("post.SupersededBy = %s, want %s", postFind.SupersededBy, "v1.2.0")
 	}
 }
