@@ -15,42 +15,59 @@ import (
 
 type EventNotifier interface {
 	SendApprovalNotification(post *approval.ApprovalPost) error
+	SendSupersededNotification(post *approval.ApprovalPost, releaseTag string) error
 }
 
 type PullRequestFilesInspector interface {
 	GetPullRequestFiles(ctx context.Context, owner, repo string, pullNumber int) ([]github.PullRequestFile, error)
 }
 
+type ReleaseComparator interface {
+	CompareCommits(ctx context.Context, owner, repo, base, head string) ([]github.Commit, error)
+}
+
 type EventOrchestrator struct {
-	approvalUseCase *approval.ApprovalUseCase
-	postProcessor   *pipeline.PostProcessor
-	publishUseCase  *publisher.PublishApprovedPostUseCase
-	contextBuilder  *pipeline.ContextBuilder
-	generator       *pipeline.DefaultGenerator
-	notifier        EventNotifier
-	prInspector     PullRequestFilesInspector
+	approvalUseCase   *approval.ApprovalUseCase
+	postProcessor     *pipeline.PostProcessor
+	publishUseCase    *publisher.PublishApprovedPostUseCase
+	contextBuilder    *pipeline.ContextBuilder
+	generator         *pipeline.DefaultGenerator
+	notifier          EventNotifier
+	prInspector       PullRequestFilesInspector
+	releaseComparator ReleaseComparator
 }
 
 func NewEventOrchestrator(approvalUseCase *approval.ApprovalUseCase, postProcessor *pipeline.PostProcessor,
-	publishUseCase *publisher.PublishApprovedPostUseCase, fewShotRepo pipeline.FewShotRepository, prInspector PullRequestFilesInspector) *EventOrchestrator {
+	publishUseCase *publisher.PublishApprovedPostUseCase, fewShotRepo pipeline.FewShotRepository,
+	prInspector PullRequestFilesInspector, releaseComparator ...ReleaseComparator) *EventOrchestrator {
 	var geminiClient *pipeline.GeminiLLMClient
 	geminiApiKey := os.Getenv("GEMINI_API_KEY")
 	if geminiApiKey != "" {
 		geminiClient, _ = pipeline.NewGeminiLLMClient(geminiApiKey, os.Getenv("GEMINI_MODEL_NAME"))
 	}
 
+	var comp ReleaseComparator
+	if len(releaseComparator) > 0 {
+		comp = releaseComparator[0]
+	}
+
 	return &EventOrchestrator{
-		approvalUseCase: approvalUseCase,
-		postProcessor:   postProcessor,
-		publishUseCase:  publishUseCase,
-		contextBuilder:  pipeline.NewContextBuilder(),
-		generator:       pipeline.NewDefaultGenerator(geminiClient, fewShotRepo),
-		prInspector:     prInspector,
+		approvalUseCase:   approvalUseCase,
+		postProcessor:     postProcessor,
+		publishUseCase:    publishUseCase,
+		contextBuilder:    pipeline.NewContextBuilder(),
+		generator:         pipeline.NewDefaultGenerator(geminiClient, fewShotRepo),
+		prInspector:       prInspector,
+		releaseComparator: comp,
 	}
 }
 
 func (eo *EventOrchestrator) SetNotifier(notifier EventNotifier) {
 	eo.notifier = notifier
+}
+
+func (eo *EventOrchestrator) SetReleaseComparator(comp ReleaseComparator) {
+	eo.releaseComparator = comp
 }
 
 func (eo *EventOrchestrator) ProcessGitHubPayload(ctx context.Context, payload webhook.GitHubPayload) (*approval.ApprovalPost, error) {
@@ -63,6 +80,22 @@ func (eo *EventOrchestrator) ProcessGitHubPayload(ctx context.Context, payload w
 		archetype = pipeline.ArchetypeRelease
 		if payload.Repository.FullName != "" && payload.Release.TagName != "" {
 			idempotencyKey = fmt.Sprintf("release:%s:%s", payload.Repository.FullName, payload.Release.TagName)
+
+			if eo.releaseComparator != nil && payload.Release.TagName != "" {
+				pendingPosts, err := eo.approvalUseCase.ListPending(ctx)
+				if err == nil && len(pendingPosts) > 0 {
+					var uuids []string
+					for _, p := range pendingPosts {
+						uuids = append(uuids, p.UUID)
+					}
+					_ = eo.approvalUseCase.SupersedeDrafts(ctx, uuids, payload.Release.TagName)
+					if eo.notifier != nil {
+						for _, p := range pendingPosts {
+							_ = eo.notifier.SendSupersededNotification(&p, payload.Release.TagName)
+						}
+					}
+				}
+			}
 		}
 	} else {
 		var diffStats *pipeline.DiffStats
@@ -82,16 +115,16 @@ func (eo *EventOrchestrator) ProcessGitHubPayload(ctx context.Context, payload w
 						totalAdd += f.Additions
 						totalDel += f.Deletions
 						fileDiffs = append(fileDiffs, pipeline.FileDiff{
-							Path: f.Filename,
+							Path:      f.Filename,
 							Additions: f.Additions,
 							Deletions: f.Deletions,
 						})
 					}
 					diffStats = &pipeline.DiffStats{
 						TotalFiles: len(files),
-						Additions: totalAdd,
-						Deletions: totalDel,
-						Files: fileDiffs,
+						Additions:  totalAdd,
+						Deletions:  totalDel,
+						Files:      fileDiffs,
 					}
 				}
 			}

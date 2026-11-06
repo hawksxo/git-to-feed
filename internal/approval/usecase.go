@@ -55,15 +55,15 @@ func (uc *ApprovalUseCase) Approve(ctx context.Context, uuid string) (*ApprovalP
 		return nil, err
 	}
 
+	if post.Status != StatusPending {
+		return nil, ErrInvalidTransition
+	}
+
 	if time.Since(post.CreatedAt) > DraftTTL {
 		post.Status = StatusExpired
 		post.UpdatedAt = time.Now()
 		_ = uc.repo.Update(ctx, post)
 		return nil, ErrDraftExpired
-	}
-
-	if post.Status != StatusPending {
-		return nil, ErrInvalidTransition
 	}
 
 	post.Status = StatusApproved
@@ -86,15 +86,15 @@ func (uc *ApprovalUseCase) Reject(ctx context.Context, uuid string, reason strin
 		return nil, err
 	}
 
+	if post.Status != StatusPending {
+		return nil, ErrInvalidTransition
+	}
+
 	if time.Since(post.CreatedAt) > DraftTTL {
 		post.Status = StatusExpired
 		post.UpdatedAt = time.Now()
 		_ = uc.repo.Update(ctx, post)
 		return nil, ErrDraftExpired
-	}
-
-	if post.Status != StatusPending {
-		return nil, ErrInvalidTransition
 	}
 
 	post.Status = StatusRejected
@@ -122,8 +122,15 @@ func (uc *ApprovalUseCase) EditAndApprove(ctx context.Context, uuid string, newC
 		return nil, ErrInvalidTransition
 	}
 
-	post.Status = StatusApproved
+	if time.Since(post.CreatedAt) > DraftTTL {
+		post.Status = StatusExpired
+		post.UpdatedAt = time.Now()
+		_ = uc.repo.Update(ctx, post)
+		return nil, ErrDraftExpired
+	}
+
 	post.EditedContent = newContent
+	post.Status = StatusApproved
 	post.UpdatedAt = time.Now()
 
 	if err := uc.repo.Update(ctx, post); err != nil {
@@ -135,4 +142,8 @@ func (uc *ApprovalUseCase) EditAndApprove(ctx context.Context, uuid string, newC
 
 func (uc *ApprovalUseCase) ListPending(ctx context.Context) ([]ApprovalPost, error) {
 	return uc.repo.FindAllPending(ctx)
+}
+
+func (uc *ApprovalUseCase) SupersedeDrafts(ctx context.Context, uuids []string, releaseTag string) error {
+	return uc.repo.SupersedePending(ctx, uuids, releaseTag)
 }

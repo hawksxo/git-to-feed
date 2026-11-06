@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/hawksxo/git-to-feed/internal/pipeline"
+	"github.com/lib/pq"
 )
 
 type PostgresApprovalRepository struct {
@@ -139,6 +140,25 @@ func (r *PostgresApprovalRepository) Update(ctx context.Context, post *ApprovalP
 	rowsAffected, err := res.RowsAffected()
 	if err == nil && rowsAffected == 0 {
 		return ErrPostNotPending
+	}
+
+	return nil
+}
+
+func (r *PostgresApprovalRepository) SupersedePending(ctx context.Context, uuids []string, releaseTag string) error {
+	if len(uuids) == 0 {
+		return nil
+	}
+
+	query := `
+		UPDATE approval_posts
+		SET status = $1, superseded_by = $2, updated_at = NOW()
+		WHERE uuid = ANY($3) AND status = 'PENDING'
+	`
+
+	_, err := r.db.ExecContext(ctx, query, string(StatusSupersededByRelease), releaseTag, pq.Array(uuids))
+	if err != nil {
+		return fmt.Errorf("error superseding approval_posts in postgres: %w", err)
 	}
 
 	return nil

@@ -135,6 +135,17 @@ func (b *Bot) SendApprovalNotification(post *approval.ApprovalPost) error {
 	return nil
 }
 
+func (b *Bot) SendSupersededNotification(post *approval.ApprovalPost, releaseTag string) error {
+	targetChannel := b.resolveChannel(b.channels.FeaturesChannelID, "features")
+	embed := &discordgo.MessageEmbed{
+		Title:       "⚡ PR Draft Superseded by Release",
+		Description: fmt.Sprintf("The draft `%s` has been superseded by release `%s`. Refer to the parent release draft for publication.", post.UUID, releaseTag),
+		Color:       0xFEE75C,
+	}
+	_, err := b.session.ChannelMessageSendEmbed(targetChannel, embed)
+	return err
+}
+
 func (b *Bot) handleInteraction(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if i.Type != discordgo.InteractionMessageComponent {
 		return

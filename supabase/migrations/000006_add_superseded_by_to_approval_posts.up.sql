@@ -1,0 +1,1 @@
+ALTER TABLE approval_posts ADD COLUMN IF NOT EXISTS superseded_by VARCHAR(64) DEFAULT '';

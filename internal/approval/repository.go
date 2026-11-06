@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"time"
 )
 
 var (
@@ -15,13 +16,13 @@ type InMemoryApprovalRepository struct {
 	posts map[string]*ApprovalPost
 }
 
-func NewInMemoryApprovalRepository() *InMemoryApprovalRepository  {
+func NewInMemoryApprovalRepository() *InMemoryApprovalRepository {
 	return &InMemoryApprovalRepository{
 		posts: make(map[string]*ApprovalPost),
 	}
 }
 
-func (r *InMemoryApprovalRepository) Save(ctx context.Context, post *ApprovalPost) error  {
+func (r *InMemoryApprovalRepository) Save(ctx context.Context, post *ApprovalPost) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -62,5 +63,23 @@ func (r *InMemoryApprovalRepository) Update(ctx context.Context, post *ApprovalP
 		return ErrPostNotFound
 	}
 	r.posts[post.UUID] = post
+	return nil
+}
+
+func (r *InMemoryApprovalRepository) SupersedePending(ctx context.Context, uuids []string, releaseTag string) error {
+	if len(uuids) == 0 {
+		return nil
+	}
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for _, id := range uuids {
+		if post, exists := r.posts[id]; exists && post.Status == StatusPending {
+			post.Status = StatusSupersededByRelease
+			post.SupersededBy = releaseTag
+			post.UpdatedAt = time.Now()
+		}
+	}
+
 	return nil
 }
