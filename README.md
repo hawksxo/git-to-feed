@@ -1,4 +1,4 @@
-<a id="readme-top"></a>
+﻿<a id="readme-top"></a>
 
 <!-- PROJECT SHIELDS -->
 [![Contributors][contributors-shield]][contributors-url]
@@ -220,14 +220,22 @@ The microservice exposes clean REST HTTP endpoints and granular OpenStatus compo
   - [x] Interactive 1-Click Discard Action & Lazy TTL Lifecycle ([#59](https://github.com/hawksxo/git-to-feed/issues/59))
   - [x] GitHub REST Platform Adapter Client Suite ([#60](https://github.com/hawksxo/git-to-feed/issues/60))
   - [x] Dynamic Few-Shot Prompt Builder & Supabase SSOT ([#56](https://github.com/hawksxo/git-to-feed/issues/56))
-- [ ] **Milestone v1.2.0 (Event Intelligence & Pipeline Filtering)** - IN PROGRESS 🚧:
+- [x] **Milestone v1.2.0 (Event Intelligence & Pipeline Filtering)** - CLOSED ✅:
   - [x] Semantic PR Title & Target Branch Ingestion Filtering ([#76](https://github.com/hawksxo/git-to-feed/issues/76))
   - [x] Tri-Pillar Context Enrichment ([#61](https://github.com/hawksxo/git-to-feed/issues/61))
   - [x] Event Hierarchy Resolution & Superseding PR Drafts ([#62](https://github.com/hawksxo/git-to-feed/issues/62))
-  - [ ] Extended Platform Health Probes & Rate Limit Observability ([#63](https://github.com/hawksxo/git-to-feed/issues/63))
+  - [ ] Extended Platform Health Probes & Rate Limit Observability ([#63](https://github.com/hawksxo/git-to-feed/issues/63)) - *⏸️ On Hold*
+- [ ] **Milestone v2.0.0 (Simplificación Arquitectónica & Núcleo Go / Architecture Simplification & Core Re-authorship)** - IN PROGRESS 🚧:
+  - [ ] Aplanamiento de dependencias y remoción de complejidad accidental.
+  - [ ] Enrutamiento HTTP directo e ingesta de webhooks sin wrappers especulativos.
+  - [ ] Consolidación de fundamentos de Go y autoría integral del sistema.
+- [ ] **Backlog en Pausa / On Hold (Post v2.0.0)**:
+  - [ ] Extended Platform Health Probes ([#63](https://github.com/hawksxo/git-to-feed/issues/63))
+  - [ ] Consolidated Version Digest & Adaptive Synthesis ([#64](https://github.com/hawksxo/git-to-feed/issues/64))
+  - [ ] 24h Daily Cadence Rule & Staging Event Queue ([#65](https://github.com/hawksxo/git-to-feed/issues/65))
+  - [ ] External API Resilience & Retry Policies ([#66](https://github.com/hawksxo/git-to-feed/issues/66))
 
-Track progress via [Milestone v1.2.0](https://github.com/hawksxo/git-to-feed/milestone/2) and review full architecture specifications in [ROADMAP_EVOLUTION.md](ROADMAP_EVOLUTION.md).
-
+Track progress via [Milestone v2.0.0](https://github.com/hawksxo/git-to-feed/milestone/3) and review full architecture specifications in [ROADMAP_EVOLUTION.md](ROADMAP_EVOLUTION.md).
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- CONTRIBUTING -->

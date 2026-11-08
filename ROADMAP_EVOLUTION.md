@@ -65,7 +65,7 @@ This document records the architectural roadmap, foundational platform modules, 
 ---
 
 # 🚀 PART II: FEATURE & INTELLIGENCE CAPABILITIES
-> **Active Target Milestone:** [v1.2.0 - Event Intelligence & Pipeline Filtering](https://github.com/hawksxo/git-to-feed/milestone/2)
+> **Milestone Status:** [v1.2.0 - Event Intelligence & Pipeline Filtering](https://github.com/hawksxo/git-to-feed/milestone/2) - CLOSED ✅ (Delivered Features #76, #61, #62)
 
 ## 6. 🛡️ Semantic PR Title & Target Branch Ingestion Filtering ([Issue #76](https://github.com/hawksxo/git-to-feed/issues/76)) - COMPLETED ✅
 - **Scenario:** Every merged pull request triggers AI post generation and approval cards in Discord regardless of branch or maintenance scope (`chore:`, `docs:`, `ci:`, `style:`, `test:`), producing webhook noise and depleting Gemini quota.
@@ -101,7 +101,7 @@ This document records the architectural roadmap, foundational platform modules, 
 
 ---
 
-## 9. 🩺 Extended Health Probes & Dependency Observability ([Issue #63](https://github.com/hawksxo/git-to-feed/issues/63))
+## 9. 🩺 Extended Health Probes & Dependency Observability ([Issue #63](https://github.com/hawksxo/git-to-feed/issues/63)) - ⏸️ ON HOLD / EN PAUSA
 - **Scenario:** Silent failures occur when external dependencies (GitHub token, Gemini API key, Discord channels) degrade.
 - **Current State:** Active probes limited to database connection and Discord Gateway WebSocket (`/health/discord-bot`).
 - **Architectural Invariant:** Non-intrusive synthetic sub-endpoints reporting upstream health without leaking credentials.
@@ -113,7 +113,7 @@ This document records the architectural roadmap, foundational platform modules, 
 ---
 
 # 🌐 PART III: ADVANCED SYNTHESIS, CADENCE & PLATFORM RESILIENCE
-> **Target Status:** Backlog (Scheduled for Milestone v1.3.0+ Evolution)
+> **Status:** ⏸️ EN ESPERA / ON HOLD (Pausado temporalmente para priorizar el Milestone v2.0.0)
 
 ## 10. 📜 Consolidated Version Digest & Adaptive Synthesis Engine ([Issue #64](https://github.com/hawksxo/git-to-feed/issues/64))
 - **Scenario:** Major and minor releases lose depth when iterative patch histories (`v1.0.1`...`v1.0.7`) are fragmented across individual drafts.
@@ -143,3 +143,18 @@ This document records the architectural roadmap, foundational platform modules, 
 - **Deliverables:**
   - Retry policy wrapper around LinkedIn and Gemini HTTP adapters.
   - `FAILED_RETRYABLE` post status and automated alert dispatching to `#bot-control`.
+---
+
+# 🚀 PART IV: MILESTONE v2.0.0 - SIMPLIFICACIÓN ARQUITECTÓNICA & REAUTORÍA EN GO
+> **Active Target Milestone:** [v2.0.0 - Simplificación de la arquitectura y reescritura del núcleo](https://github.com/hawksxo/git-to-feed/milestone/3) - IN PROGRESS 🚧
+
+### 🎯 Filosofía y Objetivo del Milestone
+- **Ley de Gall:** Reducir la complejidad accidental y las abstracciones enterprise especulativas construidas por IA.
+- **Go Idiomático y Directo:** Reemplazar interfaces prematuras de una sola implementación por structs directos (*"Accept interfaces, return structs"*).
+- **Autoría Real y Dominio de Fundamentos:** El autor razona, comprende y escribe cada línea y cada test, garantizando el control operativo total del microservicio.
+
+### 📋 Ejes de Trabajo
+1. **Enrutamiento HTTP e Ingesta de Webhooks:** Desacoplar intermediarios y procesar firmas HMAC SHA-256 de forma lineal y transparente.
+2. **Dominio Puro y Tri-Pillar Context:** Extraer funciones de negocio puras (filtrado de PRs y notas) sin dependencias ocultas.
+3. **Pipeline de Generación IA y Prompts:** Consolidar paquetes redundantes (anti-cringe, sanitizer, templates) en componentes directos.
+4. **Acceso a Datos SQL:** Unificar la persistencia PostgreSQL en queries SQL legibles y control de estados atómicos.
