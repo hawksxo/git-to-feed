@@ -1,14 +1,12 @@
 name: 'Automated Content Translator'
 
 on: 
-  issues: 
-    types: [opened, edited]
   issue_comment: 
-    types: [created, edited]
-  pull_request: 
-    types: [opened, edited]
+    types: [created]
+  issues: 
+    types: [opened]
   pull_request_review_comment: 
-    types: [created, edited]
+    types: [created]
 
 jobs:
   translate:
@@ -17,11 +15,9 @@ jobs:
       issues: write
       pull-requests: write
     steps:
-      - name: Auto Translate Issues, PRs and Comments
-        uses: tisfeng/issues-translate-action@v2.9.3
+      - name: Auto Translate Issues and Comments
+        uses: dromara/issues-translate-action@v2.8
         with:
           BOT_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           IS_MODIFY_TITLE: true
-          PRIMARY_LANGUAGE: es
-          SECONDARY_LANGUAGE: en
           CUSTOM_BOT_NOTE: "🌐 **Automated Translation to English / Traducción automática al inglés:**"
