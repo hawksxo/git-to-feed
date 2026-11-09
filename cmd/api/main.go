@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/hawksxo/git-to-feed/internal/platform/config"
+	"github.com/hawksxo/git-to-feed/internal/config"
 	"github.com/hawksxo/git-to-feed/internal/platform/http"
-	"github.com/hawksxo/git-to-feed/internal/platform/storage"
+	"github.com/hawksxo/git-to-feed/internal/storage"
 )
 
 func main() {
@@ -21,7 +21,7 @@ func main() {
 
 	router := server.NewRouter(cfg)
 
-	fmt.Println("Server started on http://localhost:8080")
+	fmt.Println("Server started on http://localhost:8080/health")
 
 	err := http.ListenAndServe(cfg.Port, router)
 	if err != nil {

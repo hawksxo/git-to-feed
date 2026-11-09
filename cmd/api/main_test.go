@@ -9,8 +9,8 @@ import (
 	"github.com/hawksxo/git-to-feed/internal/approval"
 	"github.com/hawksxo/git-to-feed/internal/pipeline"
 	"github.com/hawksxo/git-to-feed/internal/platform"
-	"github.com/hawksxo/git-to-feed/internal/platform/config"
-	server "github.com/hawksxo/git-to-feed/internal/platform/http"
+	"github.com/hawksxo/git-to-feed/internal/config"
+	"github.com/hawksxo/git-to-feed/internal/platform/http"
 	"github.com/hawksxo/git-to-feed/internal/publisher"
 )
 
