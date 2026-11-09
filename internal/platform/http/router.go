@@ -1,12 +1,8 @@
 package server
 
 import (
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"time"
@@ -14,10 +10,10 @@ import (
 	"github.com/hawksxo/git-to-feed/internal/approval"
 	"github.com/hawksxo/git-to-feed/internal/pipeline"
 	"github.com/hawksxo/git-to-feed/internal/platform"
-	"github.com/hawksxo/git-to-feed/internal/platform/config"
+	"github.com/hawksxo/git-to-feed/internal/config"
 	"github.com/hawksxo/git-to-feed/internal/platform/discord"
 	"github.com/hawksxo/git-to-feed/internal/platform/github"
-	"github.com/hawksxo/git-to-feed/internal/platform/storage"
+	"github.com/hawksxo/git-to-feed/internal/storage"
 	"github.com/hawksxo/git-to-feed/internal/publisher"
 	"github.com/hawksxo/git-to-feed/internal/webhook"
 )
@@ -201,72 +197,26 @@ func NewRouter(cfg *config.Config) http.Handler {
 	}
 
 	mux.HandleFunc("POST /api/v1/webhooks/github", func(w http.ResponseWriter, r *http.Request) {
-		// GitHub Webhook HMAC signature validation
-		secret := cfg.GitHubWebhookSecret
-		if secret == "" {
-			secret = "default_dev_secret_git_to_feed"
-		}
-		signature := r.Header.Get("X-Hub-Signature-256")
-		bodyBytes, err := io.ReadAll(r.Body)
+		payload, err := webhook.ParseAndValidate(r, cfg.GitHubWebhookSecret)
 		if err != nil {
-			http.Error(w, "Error reading request body", http.StatusBadRequest)
-			return
-		}
-		if signature != "" {
-			mac := hmac.New(sha256.New, []byte(secret))
-			mac.Write(bodyBytes)
-			calculatedSignature := "sha256=" + hex.EncodeToString(mac.Sum(nil))
-			if !hmac.Equal([]byte(signature), []byte(calculatedSignature)) {
-				http.Error(w, "Invalid signature", http.StatusUnauthorized)
-				return
-			}
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return 
 		}
 
-		eventType := r.Header.Get("X-GitHub-Event")
-		if eventType == "ping" {
+		if payload.EventType == "ping" {
 			w.WriteHeader(http.StatusOK)
-			_, _ = w.Write([]byte(`{"status":"OK","message":"Pong"}`))
+			_, _ = w.Write([]byte(`{"status":"OK", "message":"pong"}`))
 			return
 		}
-
-		var payload webhook.GitHubPayload
-		payload.EventType = eventType
-		if len(bodyBytes) > 0 {
-			_ = json.Unmarshal(bodyBytes, &payload)
-		}
-
-		// STEP 1: Strict canonical release action filtering (only process published events)
-		if eventType == "release" && payload.Action != "published" {
-			w.WriteHeader(http.StatusOK)
-			_, _ = w.Write(fmt.Appendf(nil, `{"status":"OK","message":"Release action '%s' ignored"}`, payload.Action))
-			return
-		}
-
-		// STEP 2: Strict pull request action filtering (only process merged pull requests)
-		if eventType == "pull_request" && (payload.Action != "closed" || !payload.PullRequest.Merged) {
-			w.WriteHeader(http.StatusOK)
-			_, _ = w.Write(fmt.Appendf(nil, `{"status":"OK","message":"PullRequest action '%s' (merged=%t) ignored"}`, payload.Action, payload.PullRequest.Merged))
-			return
-		}
-
-		// STEP 3: Strict pull request target branch and semantic title filtering
-		if eventType == "pull_request" {
-			shouldProcess, reason := webhook.ShouldProcessPullRequest(payload.PullRequest)
-			if !shouldProcess {
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(fmt.Appendf(nil, `{"status": "OK", "message": "PullRequest ignored: %s"}`, reason))
-				return
-			}
-		}
-
-		approvalPost, err := orchestrator.ProcessGitHubPayload(r.Context(), payload)
+		
+		post, err := orchestrator.ProcessGitHubPayload(r.Context(), payload)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write(fmt.Appendf(nil, `{"status":"CREATED","uuid":"%s"}`, approvalPost.UUID))
+		_, _ = w.Write(fmt.Appendf(nil, `{"status":"CREATED","uuid":"%s"}`, post.UUID))
 	})
 
 	mux.HandleFunc("POST /api/v1/approvals/{uuid}/approve", func(w http.ResponseWriter, r *http.Request) {
