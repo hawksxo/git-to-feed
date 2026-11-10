@@ -1,6 +1,8 @@
 package webhook
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestShouldProcessPullRequest_RejectMain(t *testing.T) {
 	pr := PullRequestInfo{
@@ -28,15 +30,23 @@ func TestShouldProcessPullRequest_RejectNonDeliverablePrefix(t *testing.T) {
 	}
 }
 
-func TestShouldProcessPullRequest_AcceptValidPR(t *testing.T)  {
+func TestShouldProcessPullRequest_AcceptValidPR(t *testing.T) {
 	pr := PullRequestInfo{
 		Title: "feat: new test integration",
-		Base: BaseInfo{Ref: "develop"},
+		Base:  BaseInfo{Ref: "develop"},
 	}
 
 	got, _ := ShouldProcessPullRequest(pr)
 
 	if got != true {
 		t.Errorf("expected true for valid feat PR, got false")
+	}
+}
+
+func TestExtractFeedNotes(t *testing.T) {
+	input := "Hola equipo\n/feed-notes Soporte para OAuth2\nPor favor revisar"
+	got := ExtractFeedNotes(input)
+	if got != "Soporte para OAuth2" {
+		t.Errorf("got %q, want %q", got, "Soporte para OAuth2")
 	}
 }
