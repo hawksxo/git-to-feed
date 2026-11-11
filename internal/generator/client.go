@@ -1,4 +1,4 @@
-package pipeline
+package generator
 
 import (
 	"context"
@@ -7,20 +7,21 @@ import (
 	"google.golang.org/genai"
 )
 
-var ErrEmptyGeminiApiKey = errors.New("gemini API key cannot be empty")
-
 type GeminiLLMClient struct {
 	apiKey    string
 	modelName string
+	config    *genai.GenerateContentConfig
 }
 
 func NewGeminiLLMClient(apiKey string, modelName string) (*GeminiLLMClient, error) {
 	if apiKey == "" {
-		return nil, ErrEmptyGeminiApiKey
+		return nil, errors.New("la API KEY de Gemini no puede estar vacía")
 	}
+
 	if modelName == "" {
 		modelName = "gemini-3.5-flash-lite"
 	}
+
 	return &GeminiLLMClient{
 		apiKey:    apiKey,
 		modelName: modelName,
@@ -35,9 +36,11 @@ func (c *GeminiLLMClient) GeneratePostWithLLM(ctx context.Context, prompt string
 	if err != nil {
 		return "", err
 	}
-	resp, err := client.Models.GenerateContent(ctx, c.modelName, genai.Text(prompt), nil)
+
+	resp, err := client.Models.GenerateContent(ctx, c.modelName, genai.Text(prompt), c.config)
 	if err != nil {
 		return "", err
 	}
+
 	return resp.Text(), nil
 }
