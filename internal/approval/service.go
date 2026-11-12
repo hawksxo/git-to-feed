@@ -9,12 +9,12 @@ import (
 )
 
 var (
-	ErrInvalidTransition  = errors.New("invalid approval status transition")
-	ErrEmptyRejectReason  = errors.New("reject reason cannot be empty")
-	ErrEmptyEditedContent = errors.New("edited content cannot be empty")
-	ErrPostNotPending     = errors.New("approval post is not in pending status")
+	ErrInvalidTransition  = errors.New("transicion de estado de aprobacion no permitida")
+	ErrEmptyRejectReason  = errors.New("el motivo de rechazo no puede estar vacio")
+	ErrEmptyEditedContent = errors.New("el contenido editado no puede estar vacio")
+	ErrPostNotPending     = errors.New("el post no se encuentra en estado pendiente")
 	DraftTTL              = 14 * 24 * time.Hour
-	ErrDraftExpired       = errors.New("approval draft has expired (older than 14 days)")
+	ErrDraftExpired       = errors.New("el borrador de aprobacion ha expirado (antiguedad mayor a 14 dias)")
 )
 
 type Service struct {

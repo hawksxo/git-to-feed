@@ -7,8 +7,8 @@ import (
 )
 
 var (
-	ErrNilLinkedInClient = errors.New("linkedin client cannot be nil")
-	ErrNilStore          = errors.New("publisher store cannot be nil")
+	ErrNilLinkedInClient = errors.New("el cliente de linkedin no puede ser nulo")
+	ErrNilStore          = errors.New("el almacenamiento de publicaciones no puede ser nulo")
 )
 
 type Service struct {

@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	ErrNotFound = errors.New("published post not found")
+	ErrNotFound = errors.New("publicacion no encontrada en la base de datos")
 )
 
 type Store interface {

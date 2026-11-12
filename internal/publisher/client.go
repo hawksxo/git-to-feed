@@ -12,10 +12,10 @@ import (
 )
 
 var (
-	ErrEmptyAccessToken = errors.New("access token cannot be empty")
-	ErrEmptyAuthorURN   = errors.New("author URN cannot be empty")
-	ErrEmptyPostText    = errors.New("post text cannot be empty")
-	ErrLinkedInAPI      = errors.New("linkedin api error")
+	ErrEmptyAccessToken = errors.New("el token de acceso a linkedin no puede estar vacio")
+	ErrEmptyAuthorURN   = errors.New("el autor urn de linkedin no puede estar vacio")
+	ErrEmptyPostText    = errors.New("el texto del post a publicar no puede estar vacio")
+	ErrLinkedInAPI      = errors.New("error en la api de linkedin")
 )
 
 type LinkedInClient interface {
@@ -126,7 +126,7 @@ func (c *HTTPLinkedInClient) SharePost(ctx context.Context, authorURN string, te
 	}
 
 	if ugcResp.ID == "" {
-		return "", errors.New("empty id returned from linkedin")
+		return "", errors.New("linkedin respondio con un identificador de post vacio")
 	}
 
 	return ugcResp.ID, nil

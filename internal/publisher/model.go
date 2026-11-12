@@ -8,10 +8,10 @@ import (
 )
 
 var (
-	ErrEmptyApprovalUUID       = errors.New("approval post UUID cannot be empty")
-	ErrInvalidStatusTransition = errors.New("invalid publish status transition")
-	ErrEmptyShareURN           = errors.New("linkedin share URN cannot be empty")
-	ErrEmptyFailureReason      = errors.New("failure reason cannot be empty")
+	ErrEmptyApprovalUUID       = errors.New("el identificador uuid del post de aprobacion no puede estar vacio")
+	ErrInvalidStatusTransition = errors.New("transicion de estado de publicacion no permitida")
+	ErrEmptyShareURN           = errors.New("el share urn de linkedin no puede estar vacio")
+	ErrEmptyFailureReason      = errors.New("el motivo del fallo de publicacion no puede estar vacio")
 )
 
 type PublishStatus string
