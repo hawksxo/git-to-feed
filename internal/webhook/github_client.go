@@ -1,4 +1,4 @@
-package github
+package webhook
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-const defaultBaseURL string = "https://api.github.com"
+const defaultGitHubBaseURL string = "https://api.github.com"
 
 type Commit struct {
 	SHA     string `json:"sha"`
@@ -18,7 +18,7 @@ type Commit struct {
 
 type compareResponse struct {
 	Commits []struct {
-		SHA     string `json:"sha"`
+		SHA    string `json:"sha"`
 		Commit struct {
 			Message string `json:"message"`
 		} `json:"commit"`
@@ -50,31 +50,31 @@ type rateLimitResponse struct {
 	}
 }
 
-type Client struct {
+type GitHubClient struct {
 	httpClient *http.Client
 	token      string
 	baseURL    string
 }
 
-func NewClient(token string, timeout time.Duration) *Client {
+func NewGitHubClient(token string, timeout time.Duration) *GitHubClient {
 	if timeout <= 0 {
 		timeout = 10 * time.Second
 	}
-	return &Client{
+	return &GitHubClient{
 		httpClient: &http.Client{Timeout: timeout},
 		token:      token,
-		baseURL:    defaultBaseURL,
+		baseURL:    defaultGitHubBaseURL,
 	}
 }
 
-func (c *Client) SetBaseURL(url string) {
+func (c *GitHubClient) SetBaseURL(url string) {
 	c.baseURL = strings.TrimRight(url, "/")
 }
 
-func (c *Client) newRequest(ctx context.Context, method, endpoint string) (*http.Request, error) {
+func (c *GitHubClient) newRequest(ctx context.Context, method, endpoint string) (*http.Request, error) {
 	req, err := http.NewRequestWithContext(ctx, method, c.baseURL+endpoint, nil)
 	if err != nil {
-		return nil, fmt.Errorf("github: error creating request: %w", err)
+		return nil, fmt.Errorf("github: error al crear la peticion: %w", err)
 	}
 
 	req.Header.Set("Accept", "application/vnd.github+json")
@@ -86,7 +86,7 @@ func (c *Client) newRequest(ctx context.Context, method, endpoint string) (*http
 	return req, nil
 }
 
-func (c *Client) GetRateLimitStatus(ctx context.Context) (*RateLimitStatus, error) {
+func (c *GitHubClient) GetRateLimitStatus(ctx context.Context) (*RateLimitStatus, error) {
 	req, err := c.newRequest(ctx, http.MethodGet, "/rate_limit")
 	if err != nil {
 		return nil, err
@@ -94,17 +94,17 @@ func (c *Client) GetRateLimitStatus(ctx context.Context) (*RateLimitStatus, erro
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("github: error executing request: %w", err)
+		return nil, fmt.Errorf("github: error al ejecutar la peticion de rate limit: %w", err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("github: rate limit returned unexpected status: %d", resp.StatusCode)
+		return nil, fmt.Errorf("github: consulta de rate limit devolvio codigo inesperado: %d", resp.StatusCode)
 	}
 
 	var data rateLimitResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, fmt.Errorf("github: error decoding rate limit response: %w", err)
+		return nil, fmt.Errorf("github: error al decodificar la respuesta de rate limit: %w", err)
 	}
 
 	return &RateLimitStatus{
@@ -114,7 +114,7 @@ func (c *Client) GetRateLimitStatus(ctx context.Context) (*RateLimitStatus, erro
 	}, nil
 }
 
-func (c *Client) GetPullRequestFiles(ctx context.Context, owner, repo string, pullNumber int) ([]PullRequestFile, error) {
+func (c *GitHubClient) GetPullRequestFiles(ctx context.Context, owner, repo string, pullNumber int) ([]PullRequestFile, error) {
 	endpoint := fmt.Sprintf("/repos/%s/%s/pulls/%d/files", owner, repo, pullNumber)
 	req, err := c.newRequest(ctx, http.MethodGet, endpoint)
 	if err != nil {
@@ -123,23 +123,23 @@ func (c *Client) GetPullRequestFiles(ctx context.Context, owner, repo string, pu
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("github: error executing request: %w", err)
+		return nil, fmt.Errorf("github: error al consultar archivos del pull request: %w", err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("github: get pr files returned unexpected status: %d", resp.StatusCode)
+		return nil, fmt.Errorf("github: consulta de archivos de pull request devolvio estado inesperado: %d", resp.StatusCode)
 	}
 
 	var files []PullRequestFile
 	if err := json.NewDecoder(resp.Body).Decode(&files); err != nil {
-		return nil, fmt.Errorf("github: error decoding pr files response: %w", err)
+		return nil, fmt.Errorf("github: error al decodificar archivos de pull request: %w", err)
 	}
 
 	return files, nil
 }
 
-func (c *Client) CompareCommits(ctx context.Context, owner, repo, base, head string) ([]Commit, error) {
+func (c *GitHubClient) CompareCommits(ctx context.Context, owner, repo, base, head string) ([]Commit, error) {
 	endpoint := fmt.Sprintf("/repos/%s/%s/compare/%s...%s", owner, repo, base, head)
 	req, err := c.newRequest(ctx, http.MethodGet, endpoint)
 	if err != nil {
@@ -148,23 +148,23 @@ func (c *Client) CompareCommits(ctx context.Context, owner, repo, base, head str
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("github: error executing request: %w", err)
+		return nil, fmt.Errorf("github: error al comparar commits: %w", err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("github: get compare commits returned unexpected status: %d", resp.StatusCode)
+		return nil, fmt.Errorf("github: comparacion de commits devolvio estado inesperado: %d", resp.StatusCode)
 	}
 
 	var data compareResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, fmt.Errorf("github: error decoding compare commits response: %w", err)
+		return nil, fmt.Errorf("github: error al decodificar respuesta de comparacion de commits: %w", err)
 	}
 
 	commits := make([]Commit, 0, len(data.Commits))
 	for _, item := range data.Commits {
 		commits = append(commits, Commit{
-			SHA: item.SHA,
+			SHA:     item.SHA,
 			Message: item.Commit.Message,
 		})
 	}
