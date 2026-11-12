@@ -151,7 +151,7 @@ func NewRouter(cfg *config.Config) http.Handler {
 			shouldProcess, reason := webhook.ShouldProcessPullRequest(payload.PullRequest)
 			if !shouldProcess {
 				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write([]byte(fmt.Sprintf(`{"status":"IGNORED","message":"%s"}`, reason)))
+				_, _ = w.Write(fmt.Appendf(nil, `{"status":"IGNORED","message":"%s"}`, reason))
 				return
 			}
 			archetype = generator.ArchetypeFeature
