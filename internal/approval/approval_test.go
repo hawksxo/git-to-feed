@@ -6,54 +6,8 @@ import (
 	"time"
 )
 
-type mockStore struct {
-	posts map[string]*ApprovalPost
-}
-
-func newMockStore() *mockStore {
-	return &mockStore{posts: make(map[string]*ApprovalPost)}
-}
-
-func (m *mockStore) Save(ctx context.Context, post *ApprovalPost) error {
-	m.posts[post.UUID] = post
-	return nil
-}
-
-func (m *mockStore) FindByUUID(ctx context.Context, uuid string) (*ApprovalPost, error) {
-	p, ok := m.posts[uuid]
-	if !ok {
-		return nil, ErrPostNotFound
-	}
-	return p, nil
-}
-
-func (m *mockStore) FindAllPending(ctx context.Context) ([]ApprovalPost, error) {
-	var list []ApprovalPost
-	for _, p := range m.posts {
-		if p.Status == StatusPending {
-			list = append(list, *p)
-		}
-	}
-	return list, nil
-}
-
-func (m *mockStore) Update(ctx context.Context, post *ApprovalPost) error {
-	m.posts[post.UUID] = post
-	return nil
-}
-
-func (m *mockStore) SupersedePending(ctx context.Context, uuids []string, releaseTag string) error {
-	for _, id := range uuids {
-		if p, ok := m.posts[id]; ok && p.Status == StatusPending {
-			p.Status = StatusSupersededByRelease
-			p.SupersededBy = releaseTag
-		}
-	}
-	return nil
-}
-
 func TestSubmitForApproval(t *testing.T) {
-	store := newMockStore()
+	store := NewInMemoryStore()
 	svc := NewService(store)
 	ctx := context.Background()
 
@@ -71,7 +25,7 @@ func TestSubmitForApproval(t *testing.T) {
 }
 
 func TestApproveSuccessAndTransitionError(t *testing.T) {
-	store := newMockStore()
+	store := NewInMemoryStore()
 	svc := NewService(store)
 	ctx := context.Background()
 
@@ -93,7 +47,7 @@ func TestApproveSuccessAndTransitionError(t *testing.T) {
 }
 
 func TestRejectWithReason(t *testing.T) {
-	store := newMockStore()
+	store := NewInMemoryStore()
 	svc := NewService(store)
 	ctx := context.Background()
 
@@ -116,7 +70,7 @@ func TestRejectWithReason(t *testing.T) {
 }
 
 func TestEditAndApprove(t *testing.T) {
-	store := newMockStore()
+	store := NewInMemoryStore()
 	svc := NewService(store)
 	ctx := context.Background()
 
@@ -135,7 +89,7 @@ func TestEditAndApprove(t *testing.T) {
 }
 
 func TestDraftExpiration(t *testing.T) {
-	store := newMockStore()
+	store := NewInMemoryStore()
 	svc := NewService(store)
 	ctx := context.Background()
 

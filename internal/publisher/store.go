@@ -25,6 +25,37 @@ func NewPostgresStore(db *sql.DB) *PostgresStore {
 	return &PostgresStore{db: db}
 }
 
+type inMemoryStore struct {
+	posts map[string]*PublishedPost
+}
+
+func NewInMemoryStore() Store {
+	return &inMemoryStore{
+		posts: make(map[string]*PublishedPost),
+	}
+}
+
+func (m *inMemoryStore) Save(ctx context.Context, post *PublishedPost) error {
+	m.posts[post.ID] = post
+	return nil
+}
+
+func (m *inMemoryStore) FindByUUID(ctx context.Context, uuid string) (*PublishedPost, error) {
+	if p, ok := m.posts[uuid]; ok {
+		return p, nil
+	}
+	return nil, ErrNotFound
+}
+
+func (m *inMemoryStore) FindByApprovalUUID(ctx context.Context, approvalUUID string) (*PublishedPost, error) {
+	for _, p := range m.posts {
+		if p.ApprovalPostUUID == approvalUUID {
+			return p, nil
+		}
+	}
+	return nil, ErrNotFound
+}
+
 func (s *PostgresStore) Save(ctx context.Context, post *PublishedPost) error {
 	query := `
 		INSERT INTO published_posts (id, approval_post_uuid, linkedin_share_urn, status, error_message, published_at)

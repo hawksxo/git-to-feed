@@ -7,10 +7,10 @@ import (
 )
 
 type Generator struct {
-	client *GeminiLLMClient
+	client LLMClient
 }
 
-func New(client *GeminiLLMClient) *Generator {
+func New(client LLMClient) *Generator {
 	return &Generator{
 		client: client,
 	}

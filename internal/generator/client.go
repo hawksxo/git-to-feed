@@ -7,10 +7,26 @@ import (
 	"google.golang.org/genai"
 )
 
+type LLMClient interface {
+	GeneratePostWithLLM(ctx context.Context, prompt string) (string, error)
+}
+
 type GeminiLLMClient struct {
 	apiKey    string
 	modelName string
 	config    *genai.GenerateContentConfig
+}
+
+type mockLLMClient struct {
+	response string
+}
+
+func NewMockLLMClient(response string) LLMClient {
+	return &mockLLMClient{response: response}
+}
+
+func (m *mockLLMClient) GeneratePostWithLLM(ctx context.Context, prompt string) (string, error) {
+	return m.response, nil
 }
 
 func NewGeminiLLMClient(apiKey string, modelName string) (*GeminiLLMClient, error) {

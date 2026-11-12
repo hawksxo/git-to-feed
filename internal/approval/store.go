@@ -25,10 +25,58 @@ type PostgresStore struct {
 	db *sql.DB
 }
 
-func New(db *sql.DB) *PostgresStore {
+func NewPostgresStore(db *sql.DB) *PostgresStore {
 	return &PostgresStore{
 		db: db,
 	}
+}
+
+type inMemoryStore struct {
+	posts map[string]*ApprovalPost
+}
+
+func NewInMemoryStore() Store {
+	return &inMemoryStore{
+		posts: make(map[string]*ApprovalPost),
+	}
+}
+
+func (m *inMemoryStore) Save(ctx context.Context, post *ApprovalPost) error {
+	m.posts[post.UUID] = post
+	return nil
+}
+
+func (m *inMemoryStore) FindByUUID(ctx context.Context, uuid string) (*ApprovalPost, error) {
+	p, ok := m.posts[uuid]
+	if !ok {
+		return nil, ErrPostNotFound
+	}
+	return p, nil
+}
+
+func (m *inMemoryStore) FindAllPending(ctx context.Context) ([]ApprovalPost, error) {
+	var list []ApprovalPost
+	for _, p := range m.posts {
+		if p.Status == StatusPending {
+			list = append(list, *p)
+		}
+	}
+	return list, nil
+}
+
+func (m *inMemoryStore) Update(ctx context.Context, post *ApprovalPost) error {
+	m.posts[post.UUID] = post
+	return nil
+}
+
+func (m *inMemoryStore) SupersedePending(ctx context.Context, uuids []string, releaseTag string) error {
+	for _, id := range uuids {
+		if p, ok := m.posts[id]; ok && p.Status == StatusPending {
+			p.Status = StatusSupersededByRelease
+			p.SupersededBy = releaseTag
+		}
+	}
+	return nil
 }
 
 func (s *PostgresStore) Save(ctx context.Context, post *ApprovalPost) error {

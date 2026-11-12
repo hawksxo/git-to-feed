@@ -7,35 +7,6 @@ import (
 	"testing"
 )
 
-type mockStore struct {
-	posts map[string]*PublishedPost
-}
-
-func newMockStore() *mockStore {
-	return &mockStore{posts: make(map[string]*PublishedPost)}
-}
-
-func (m *mockStore) Save(ctx context.Context, post *PublishedPost) error {
-	m.posts[post.ID] = post
-	return nil
-}
-
-func (m *mockStore) FindByUUID(ctx context.Context, uuid string) (*PublishedPost, error) {
-	if p, ok := m.posts[uuid]; ok {
-		return p, nil
-	}
-	return nil, ErrNotFound
-}
-
-func (m *mockStore) FindByApprovalUUID(ctx context.Context, approvalUUID string) (*PublishedPost, error) {
-	for _, p := range m.posts {
-		if p.ApprovalPostUUID == approvalUUID {
-			return p, nil
-		}
-	}
-	return nil, ErrNotFound
-}
-
 func TestModelTransitions(t *testing.T) {
 	post, err := NewPublishedPost("app-123")
 	if err != nil {
@@ -61,7 +32,7 @@ func TestModelTransitions(t *testing.T) {
 
 func TestServicePublishSuccess(t *testing.T) {
 	mockClient := NewMockLinkedInClient("urn:li:share:test", false)
-	store := newMockStore()
+	store := NewInMemoryStore()
 	svc, err := NewService(mockClient, store, "urn:li:person:author")
 	if err != nil {
 		t.Fatalf("unexpected error initializing service: %v", err)
@@ -82,7 +53,7 @@ func TestServicePublishSuccess(t *testing.T) {
 
 func TestServicePublishFailure(t *testing.T) {
 	mockClient := NewMockLinkedInClient("", true) // Falla a proposito
-	store := newMockStore()
+	store := NewInMemoryStore()
 	svc, _ := NewService(mockClient, store, "urn:li:person:author")
 
 	pub, err := svc.Publish(context.Background(), "app-uuid-2", "Contenido a fallar")
