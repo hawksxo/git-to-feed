@@ -1,9 +1,8 @@
 package publisher
 
 import (
-	"context"
-	"errors"
 	"crypto/rand"
+	"errors"
 	"fmt"
 	"time"
 )
@@ -75,14 +74,4 @@ func (p *PublishedPost) MarkAsFailed(reason string) error {
 	p.ErrorMessage = reason
 	p.PublishedAt = time.Now().UTC()
 	return nil
-}
-
-type LinkedInClient interface {
-	SharePost(ctx context.Context, authorURN string, text string) (shareURN string, err error)
-}
-
-type PublisherRepository interface {
-	Save(ctx context.Context, post *PublishedPost) error
-	FindByUUID(ctx context.Context, uuid string) (*PublishedPost, error)
-	FindByApprovalUUID(ctx context.Context, approvalUUID string) (*PublishedPost, error)
 }

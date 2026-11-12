@@ -3,18 +3,29 @@ package publisher
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 )
 
-type PostgresPublisherRepository struct {
+var (
+	ErrNotFound = errors.New("published post not found")
+)
+
+type Store interface {
+	Save(ctx context.Context, post *PublishedPost) error
+	FindByUUID(ctx context.Context, uuid string) (*PublishedPost, error)
+	FindByApprovalUUID(ctx context.Context, approvalUUID string) (*PublishedPost, error)
+}
+
+type PostgresStore struct {
 	db *sql.DB
 }
 
-func NewPostgresPublisherRepository(db *sql.DB) *PostgresPublisherRepository {
-	return &PostgresPublisherRepository{db: db}
+func NewPostgresStore(db *sql.DB) *PostgresStore {
+	return &PostgresStore{db: db}
 }
 
-func (r *PostgresPublisherRepository) Save(ctx context.Context, post *PublishedPost) error {
+func (s *PostgresStore) Save(ctx context.Context, post *PublishedPost) error {
 	query := `
 		INSERT INTO published_posts (id, approval_post_uuid, linkedin_share_urn, status, error_message, published_at)
 		VALUES ($1, $2, $3, $4, $5, $6)
@@ -24,7 +35,7 @@ func (r *PostgresPublisherRepository) Save(ctx context.Context, post *PublishedP
 		    error_message = EXCLUDED.error_message,
 		    published_at = EXCLUDED.published_at
 	`
-	_, err := r.db.ExecContext(
+	_, err := s.db.ExecContext(
 		ctx, query,
 		post.ID,
 		post.ApprovalPostUUID,
@@ -39,7 +50,7 @@ func (r *PostgresPublisherRepository) Save(ctx context.Context, post *PublishedP
 	return nil
 }
 
-func (r *PostgresPublisherRepository) FindByUUID(ctx context.Context, uuid string) (*PublishedPost, error) {
+func (s *PostgresStore) FindByUUID(ctx context.Context, uuid string) (*PublishedPost, error) {
 	query := `
 		SELECT id, approval_post_uuid, linkedin_share_urn, status, error_message, published_at
 		FROM published_posts
@@ -48,7 +59,7 @@ func (r *PostgresPublisherRepository) FindByUUID(ctx context.Context, uuid strin
 	var post PublishedPost
 	var statusStr string
 
-	err := r.db.QueryRowContext(ctx, query, uuid).Scan(
+	err := s.db.QueryRowContext(ctx, query, uuid).Scan(
 		&post.ID,
 		&post.ApprovalPostUUID,
 		&post.LinkedInShareURN,
@@ -57,17 +68,17 @@ func (r *PostgresPublisherRepository) FindByUUID(ctx context.Context, uuid strin
 		&post.PublishedAt,
 	)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrNotFound
 		}
-		return nil, fmt.Errorf("error buscando published_post por UUID: %w", err)
+		return nil, fmt.Errorf("error buscando published_post: %w", err)
 	}
 
 	post.Status = PublishStatus(statusStr)
 	return &post, nil
 }
 
-func (r *PostgresPublisherRepository) FindByApprovalUUID(ctx context.Context, approvalUUID string) (*PublishedPost, error) {
+func (s *PostgresStore) FindByApprovalUUID(ctx context.Context, approvalUUID string) (*PublishedPost, error) {
 	query := `
 		SELECT id, approval_post_uuid, linkedin_share_urn, status, error_message, published_at
 		FROM published_posts
@@ -76,7 +87,7 @@ func (r *PostgresPublisherRepository) FindByApprovalUUID(ctx context.Context, ap
 	var post PublishedPost
 	var statusStr string
 
-	err := r.db.QueryRowContext(ctx, query, approvalUUID).Scan(
+	err := s.db.QueryRowContext(ctx, query, approvalUUID).Scan(
 		&post.ID,
 		&post.ApprovalPostUUID,
 		&post.LinkedInShareURN,
@@ -85,10 +96,10 @@ func (r *PostgresPublisherRepository) FindByApprovalUUID(ctx context.Context, ap
 		&post.PublishedAt,
 	)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrNotFound
 		}
-		return nil, fmt.Errorf("error buscando published_post por ApprovalUUID: %w", err)
+		return nil, fmt.Errorf("error buscando published_post por approval_uuid: %w", err)
 	}
 
 	post.Status = PublishStatus(statusStr)

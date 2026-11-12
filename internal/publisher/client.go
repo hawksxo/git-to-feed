@@ -18,6 +18,10 @@ var (
 	ErrLinkedInAPI      = errors.New("linkedin api error")
 )
 
+type LinkedInClient interface {
+	SharePost(ctx context.Context, authorURN string, text string) (string, error)
+}
+
 type HTTPLinkedInClient struct {
 	accessToken string
 	httpClient  *http.Client
@@ -39,10 +43,10 @@ func NewHTTPLinkedInClient(accessToken string, httpClient *http.Client) (*HTTPLi
 }
 
 type ugcPostRequest struct {
-	Author         string         `json:"author"`
-	LifecycleState string         `json:"lifecycleState"`
+	Author          string          `json:"author"`
+	LifecycleState  string          `json:"lifecycleState"`
 	SpecificContent specificContent `json:"specificContent"`
-	Visibility     visibility     `json:"visibility"`
+	Visibility      visibility      `json:"visibility"`
 }
 
 type specificContent struct {
@@ -50,8 +54,8 @@ type specificContent struct {
 }
 
 type shareContent struct {
-	ShareCommentary shareCommentary `json:"shareCommentary"`
-	ShareMediaCategory string       `json:"shareMediaCategory"`
+	ShareCommentary    shareCommentary `json:"shareCommentary"`
+	ShareMediaCategory string          `json:"shareMediaCategory"`
 }
 
 type shareCommentary struct {
@@ -79,7 +83,9 @@ func (c *HTTPLinkedInClient) SharePost(ctx context.Context, authorURN string, te
 		LifecycleState: "PUBLISHED",
 		SpecificContent: specificContent{
 			ShareContent: shareContent{
-				ShareCommentary: shareCommentary{Text: text},
+				ShareCommentary: shareCommentary{
+					Text: text,
+				},
 				ShareMediaCategory: "NONE",
 			},
 		},
@@ -88,67 +94,71 @@ func (c *HTTPLinkedInClient) SharePost(ctx context.Context, authorURN string, te
 		},
 	}
 
-	jsonBytes, err := json.Marshal(payload)
+	bodyBytes, err := json.Marshal(payload)
 	if err != nil {
-		return "", fmt.Errorf("error serializando payload ugcPost: %w", err)
+		return "", fmt.Errorf("error marshalling ugc request: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL, bytes.NewReader(jsonBytes))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL, bytes.NewBuffer(bodyBytes))
 	if err != nil {
-		return "", fmt.Errorf("error creando http request: %w", err)
+		return "", fmt.Errorf("error creating request: %w", err)
 	}
 
-	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+c.accessToken)
+	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-Restli-Protocol-Version", "2.0.0")
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("error ejecutando request a linkedin: %w", err)
+		return "", fmt.Errorf("network error sharing to linkedin: %w", err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		return "", fmt.Errorf("%w: status %d - %s", ErrLinkedInAPI, resp.StatusCode, string(bodyBytes))
+	respBody, _ := io.ReadAll(resp.Body)
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return "", fmt.Errorf("%w: status %d, body: %s", ErrLinkedInAPI, resp.StatusCode, string(respBody))
 	}
 
-	var resPayload ugcPostResponse
-	if err := json.NewDecoder(resp.Body).Decode(&resPayload); err != nil {
-		return "", fmt.Errorf("error decodificando respuesta de linkedin: %w", err)
+	var ugcResp ugcPostResponse
+	if err := json.Unmarshal(respBody, &ugcResp); err != nil {
+		return "", fmt.Errorf("error parsing linkedin response: %w", err)
 	}
 
-	if resPayload.ID == "" {
-		return "", fmt.Errorf("%w: URN no retornado por linkedin", ErrLinkedInAPI)
+	if ugcResp.ID == "" {
+		return "", errors.New("empty id returned from linkedin")
 	}
 
-	return resPayload.ID, nil
+	return ugcResp.ID, nil
 }
 
 type MockLinkedInClient struct {
-	ShouldFail bool
-	ShareURN   string
+	ReturnURN   string
+	ShouldFail  bool
+	LastText    string
+	LastAuthor  string
+	SharedCount int
 }
 
-func NewMockLinkedInClient(shareURN string, shouldFail bool) *MockLinkedInClient {
-	if shareURN == "" {
-		shareURN = "urn:li:share:999999999"
-	}
+func NewMockLinkedInClient(returnURN string, shouldFail bool) *MockLinkedInClient {
 	return &MockLinkedInClient{
-		ShareURN:   shareURN,
+		ReturnURN:  returnURN,
 		ShouldFail: shouldFail,
 	}
 }
 
 func (m *MockLinkedInClient) SharePost(ctx context.Context, authorURN string, text string) (string, error) {
-	if authorURN == "" {
-		return "", ErrEmptyAuthorURN
+	if m.ShouldFail {
+		return "", ErrLinkedInAPI
 	}
 	if text == "" {
 		return "", ErrEmptyPostText
 	}
-	if m.ShouldFail {
-		return "", fmt.Errorf("%w: mock failure configured", ErrLinkedInAPI)
+	if authorURN == "" {
+		return "", ErrEmptyAuthorURN
 	}
-	return m.ShareURN, nil
+	m.LastAuthor = authorURN
+	m.LastText = text
+	m.SharedCount++
+	return m.ReturnURN, nil
 }
