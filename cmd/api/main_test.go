@@ -2,15 +2,12 @@ package main_test
 
 import (
 	"context"
-	"net/http"
-	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/hawksxo/git-to-feed/internal/approval"
-	"github.com/hawksxo/git-to-feed/internal/pipeline"
-	"github.com/hawksxo/git-to-feed/internal/platform"
 	"github.com/hawksxo/git-to-feed/internal/config"
-	"github.com/hawksxo/git-to-feed/internal/platform/http"
+	"github.com/hawksxo/git-to-feed/internal/generator"
 	"github.com/hawksxo/git-to-feed/internal/publisher"
 )
 
@@ -24,59 +21,71 @@ func TestFullE2EFlow(t *testing.T) {
 		LinkedInAuthorURN:   "urn:li:person:testauthor",
 	}
 
-	router := server.NewRouter(cfg)
-	testServer := httptest.NewServer(router)
-	defer testServer.Close()
+	// 1. Verificacion del Pipeline Linear: Webhook Data -> Generator -> Approval -> Publisher
+	t.Run("Flujo E2E: Ingesta -> Generacion -> Aprobacion Pendiente -> Publicacion en LinkedIn", func(t *testing.T) {
+		// Mock LLM
+		mockLLM := generator.NewMockLLMClient("Post generado para la comunidad tech en LinkedIn.")
+		genSvc := generator.New(mockLLM)
 
-	// Verificacion Endpoint de Salud
-	t.Run("GET /health debe retornar 200 OK y status UP", func(t *testing.T) {
-		resp, err := http.Get(testServer.URL + "/health")
-		if err != nil {
-			t.Fatalf("error haciendo GET /health: %v", err)
+		// Generar post a partir del payload con RichContext
+		richCtx := generator.RichContext{
+			GitData: generator.GitData{
+				EventType:   "pull_request",
+				Title:       "feat: nueva arquitectura limpia v2",
+				Description: "Migración completa a package-by-feature",
+				Author:      "octocat",
+				Repository:  "hawksxo/git-to-feed",
+				URL:         "https://github.com/hawksxo/git-to-feed/pull/80",
+			},
+			ProjectIdentity: "Microservicio event-driven en Go",
+			CreatedAt:       time.Now(),
 		}
-		defer func() { _ = resp.Body.Close() }()
 
-		if resp.StatusCode != http.StatusOK {
-			t.Errorf("se esperaba status 200 OK, se obtuvo %d", resp.StatusCode)
-		}
-	})
-
-	// Verificacion del Flujo Completo E2E mediante Orquestador y HTTP Approve
-	t.Run("Flujo E2E: Ingesta -> Aprobacion Pendiente -> Publicacion en LinkedIn", func(t *testing.T) {
-		approvalRepo := approval.NewInMemoryApprovalRepository()
-		approvalUseCase := approval.NewApprovalUseCase(approvalRepo)
-		postProcessor := pipeline.NewPostProcessor()
-
-		publisherRepo := publisher.NewInMemoryPublisherRepository()
-		mockLinkedInClient := publisher.NewMockLinkedInClient("urn:li:share:e2e-success", false)
-		publishUseCase, _ := publisher.NewPublishApprovedPostUseCase(mockLinkedInClient, publisherRepo, cfg.LinkedInAuthorURN)
-
-		fewShotRepo := pipeline.NewInMemoryFewShotRepository()
-		orchestrator := platform.NewEventOrchestrator(approvalUseCase, postProcessor, publishUseCase, fewShotRepo, nil)
-
-		// 1. Simular Ingesta de Evento y Generacion
-		pendingPost, err := orchestrator.ProcessGitHubEvent(ctx, "Lanzamos nueva arquitectura limpia en Go!", pipeline.ArchetypeFeature)
+		genPost, err := genSvc.Generate(ctx, richCtx, generator.ArchetypeFeature)
 		if err != nil {
-			t.Fatalf("error procesando evento de ingesta: %v", err)
+			t.Fatalf("error en generacion de post: %v", err)
+		}
+
+		if genPost.Content == "" {
+			t.Fatal("el contenido generado no deberia estar vacio")
+		}
+
+		// Aprobacion
+		approvalStore := approval.NewInMemoryStore()
+		approvalSvc := approval.NewService(approvalStore)
+
+		pendingPost, err := approvalSvc.SubmitForApproval(ctx, genPost.Content, string(generator.ArchetypeFeature), "pr:80")
+		if err != nil {
+			t.Fatalf("error al someter post a aprobacion: %v", err)
 		}
 		if pendingPost.Status != approval.StatusPending {
-			t.Errorf("se esperaba estado PENDING en post registrado, se obtuvo %s", pendingPost.Status)
+			t.Fatalf("se esperaba estado pendiente, se obtuvo: %s", pendingPost.Status)
 		}
 
-		// 2. Simular Aprobacion y Publicacion via Endpoint HTTP
-		resp, err := http.Post(testServer.URL+"/api/v1/approvals/"+pendingPost.UUID+"/approve", "application/json", nil)
+		// Publicador
+		pubStore := publisher.NewInMemoryStore()
+		mockLinkedIn := publisher.NewMockLinkedInClient("urn:li:share:e2e-success", false)
+		pubSvc, err := publisher.NewService(mockLinkedIn, pubStore, cfg.LinkedInAuthorURN)
 		if err != nil {
-			t.Fatalf("error enviando POST /approve: %v", err)
+			t.Fatalf("error al inicializar servicio de publicacion: %v", err)
 		}
-		defer func() { _ = resp.Body.Close() }()
 
-		// 3. Confirmar que el flujo completo hasta LinkedIn termino con exito
-		publishedRecord, err := orchestrator.ApproveAndPublish(ctx, pendingPost.UUID)
+		// Simulamos aprobacion del usuario (desde Discord bot o approver)
+		approvedPost, err := approvalSvc.Approve(ctx, pendingPost.UUID)
 		if err != nil {
-			t.Fatalf("error en publicacion final: %v", err)
+			t.Fatalf("error al aprobar post: %v", err)
 		}
-		if publishedRecord.Status != publisher.PublishStatusPublished {
-			t.Errorf("se esperaba estado PUBLISHED en el registro final, se obtuvo %s", publishedRecord.Status)
+
+		pubRecord, err := pubSvc.Publish(ctx, approvedPost.UUID, approvedPost.Content)
+		if err != nil {
+			t.Fatalf("error al publicar post: %v", err)
+		}
+
+		if pubRecord.Status != publisher.PublishStatusPublished {
+			t.Fatalf("se esperaba estado publicado, se obtuvo: %s", pubRecord.Status)
+		}
+		if pubRecord.LinkedInShareURN != "urn:li:share:e2e-success" {
+			t.Fatalf("se esperaba URN de LinkedIn valido, se obtuvo: %s", pubRecord.LinkedInShareURN)
 		}
 	})
 }

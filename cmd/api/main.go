@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/hawksxo/git-to-feed/internal/config"
-	"github.com/hawksxo/git-to-feed/internal/platform/http"
 	"github.com/hawksxo/git-to-feed/internal/storage"
 )
 
@@ -19,7 +18,7 @@ func main() {
 		}
 	}
 
-	router := server.NewRouter(cfg)
+	router := NewRouter(cfg)
 
 	fmt.Println("Server started on http://localhost:8080/health")
 
