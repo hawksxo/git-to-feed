@@ -69,20 +69,37 @@ Para eliminar la fricción cognitiva de la traducción forzada y garantizar que 
 
 ---
 
-## 6. Registro de Deuda Técnica y Correcciones Arquitectónicas (10/11/2026)
+## 6. Culminación Milestone v2.0.0: Package-by-Feature (Issue #80 / PR #81 - 12/11/2026)
 
-A partir del análisis de Go Idiomático (principios SOLID aplicados a Go) y la verdadera naturaleza del proyecto como **Microservicio Orientado a Eventos**, se registran las siguientes simplificaciones esenciales:
+Se completó la migración integral desde Clean Architecture sobre-ingenierizada hacia la arquitectura idiomática **Package-by-Feature**, aplanando el microservicio en características verticales y altamente cohesivas:
 
-1. **La Verdadera Identidad del Proyecto:**
-   - `git-to-feed` no es una API REST con dashboard de usuario; es un **procesador reactivo de eventos**.
-   - El servidor HTTP existe **únicamente** para recibir los Webhooks que GitHub empuja y para los checks de salud (`/health`).
-2. **Eliminación de Endpoints Muertos / Fantasma (Complejidad Accidental):**
-   - Los endpoints REST de `approval` (`GET /api/v1/approvals/pending`, `POST /{uuid}/reject`, etc.) son código muerto: la aprobación y descarte ocurren en vivo mediante **Discord (WebSocket)**. Deben eliminarse o relegarse si no tienen un frontend consumidor.
-3. **Aplicación Pragmática de SOLID en Go:**
-   - **S (Responsabilidad Única):** Separar el cómputo puro (`filter.go`, `cleaner.go`, validación HMAC) de la red y el disco.
-   - **I y D (Interfaces Segregadas e Invertidas):**
-     - La interfaz la define el **paquete que consume**, no el que implementa.
-     - Interfaces atómicas de 1 o 2 métodos máximo (`io.Reader` style).
-     - Eliminar interfaces prematuras donde solo existe un único struct concreto (regla: *"Accept interfaces, return structs"*).
-4. **Simplificación del Paquete `generator` (en progreso):**
-   - Consolidar los 19 archivos dispersos de `pipeline` en 5 responsabilidades transparentes: `model.go`, `cleaner.go`, `client.go`, `prompt.go` y `generator.go`.
+### Estructura y Módulos de la v2.0.0:
+1. **`internal/config` & `internal/storage`:**
+   - Extraídos a la raíz de `internal/`.
+   - Soporte directo de migraciones SQL para PostgreSQL/Supabase y ping de salud.
+2. **`internal/webhook`:**
+   - `parser.go`: Validación de firmas HMAC SHA-256 y parseo seguro de payloads.
+   - `filter.go`: Evaluación pura de criterios de entrega (ramas, prefijos convencionales, tags).
+   - `model.go`: Estructuras de datos del evento GitHub.
+   - `github_client.go`: Cliente de la API de GitHub cohesionado directamente dentro del feature receptor para inspección de diffs y rate limits.
+3. **`internal/generator`:**
+   - Migración desde el antiguo `internal/pipeline` (reducción de 19 archivos a 5).
+   - Integración con el SDK oficial de Google GenAI (`google.golang.org/genai`) y modelo `gemini-3.5-flash-lite`.
+   - `prompt.go` y `cleaner.go`: Plantillas estáticas por arquetipo (`release`, `feature`, `refactor`) y filtros anti-cringe de texto.
+4. **`internal/approval`:**
+   - `service.go`: Ciclo de vida estricto de borradores (`PENDING`, `APPROVED`, `REJECTED`, `EXPIRED`, `SUPERSEDED_BY_RELEASE`) con TTL de 14 días.
+   - `store.go`: Almacenamiento PostgreSQL (`PostgresStore`) con fallback `InMemoryStore` para tests y ejecución local.
+   - `bot.go`: Cliente Discord WebSocket interactivo con botones de publicación y canal de auditoría. Eliminados los endpoints REST muertos de aprobación.
+5. **`internal/publisher`:**
+   - `client.go`: Cliente HTTP nativo para la API UGC Posts de LinkedIn con mock desacoplado.
+   - `service.go`: Transición y auditoría de publicaciones (`PENDING`, `PUBLISHED`, `FAILED`).
+   - `store.go`: Persistencia PostgreSQL (`published_posts`) y fallback `InMemoryStore`.
+6. **Eliminación Total de `internal/platform/`:**
+   - Removido el paquete genérico `platform` (HTTP, servicios y wrappers obsoletos).
+7. **`cmd/api` (Unificación del Microservicio):**
+   - `server.go`: Router único (`NewRouter`) que orquesta linealmente:
+     `GitHub Webhook -> Generator -> Approval (Discord Bot) -> Publisher (LinkedIn)`
+   - `main_test.go`: Suite completa E2E validando todo el flujo en memoria.
+8. **Entrega Formal:**
+   - Rama base de integración: **`next`** (baseline de la versión 2.0.0).
+   - Pull Request: **[PR #81](https://github.com/hawksxo/git-to-feed/pull/81)** vinculado al Issue #80.
