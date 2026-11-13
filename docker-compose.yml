@@ -1,21 +1,32 @@
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: git-to-feed-api
+    image: golang:1.27-alpine
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+    # container_name: git-to-feed-api
     ports:
       - "8080:8080"
     env_file:
       - .env
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
+    volumes:
+      - .:/app
+      - go-cache:/root/.cache/go-build
+      - go-mod-cache:/go/pkg/mod
+    working_dir: /app
+    # dns:
+    #   - 8.8.8.8
+    #   - 1.1.1.1
+    # restart: unless-stopped
+    # healthcheck:
+    #   test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1"]
+    #   interval: 30s
+    #   timeout: 5s
+    #   retries: 3
+    #   start_period: 10s
 
+volumes:
+  go-cache:
+    external: true
+  go-mod-cache:
+    external: true
